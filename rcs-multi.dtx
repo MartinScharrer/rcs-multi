@@ -275,7 +275,7 @@
 %<*package>
 % \fi
 %
-% \CheckSum{0}
+% \CheckSum{616}
 %
 % {\makeatother
 % \CharacterTable
@@ -348,7 +348,8 @@
 % This package allows to typeset version control (VC) information provided by 
 % RCS\footnote{RCS homepage: \url{http://www.gnu.org/software/rcs/}} keywords 
 % (\eg |$||Id: ... $|) in \LaTeX\ documents which can contain of multiple |.tex| 
-% files included using |\include| or |\input|.
+% files included using |\include| or |\input|. It is based on the 
+% \pkg{svn-multi} which macros have been renamed and modified to support RCS.
 %
 % This package reads the keywords of all files and provides the VC information 
 % of of the most recent changed file of the document to the user through a set 
@@ -393,7 +394,8 @@
 % The macro is for the |Id| keyword and must be written like shown.  A trailing 
 % colon with or without spaces after the keyword name (`|Id|') is also valid but 
 % \textbf{everything else} except a valid RCS string will cause a \TeX{} parse 
-% error.
+% error. The difference between |Id| and |Header| is that the latter includes 
+% the full URL/path and not only the filename.
 %
 % \DescribeMacro{rcs}{\kmarg{keyword}}
 % This macro let you typeset rcs keywords directly. The dollars will be stripped

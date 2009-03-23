@@ -1,8 +1,8 @@
 # $Id: Makefile 628 2007-07-10 20:32:06Z martin $
 
 PACKAGE=rcs-multi
-PACKFILES = ${PACKAGE}.dtx ${PACKAGE}.ins ${PACKAGE}.pdf example_main.tex \
-			example_chap1.tex example.pdf Makefile README
+PACKFILES = ${PACKAGE}.dtx ${PACKAGE}.ins ${PACKAGE}.pdf example.tex \
+			example.pdf Makefile README
 TEXAUX = *.aux *.log *.glo *.ind *.idx *.out *.svt *.toc *.ilg *.gls *.hd
 TESTDIR = tests
 TESTS = $(patsubst %.tex,%,$(subst ${TESTDIR}/,,$(wildcard ${TESTDIR}/test?.tex ${TESTDIR}/test??.tex))) # look for all test*.tex file names and remove the '.tex' 
