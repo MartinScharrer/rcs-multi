@@ -1,27 +1,7 @@
 \documentclass[12pt]{report}
-\usepackage[all,external,groups]{svn-multi}[2009/03/03]
+\usepackage{rcs-multi}
 % Version control information:
-\svnidlong
-{$HeadURL: svn+ssh://scharrer-online.de/home/martin/svn/src/trunk/latex/svn-multi-2/example_main.tex $}
-{$LastChangedDate: 2008-12-03 13:29:19 +0000 (Wed, 03 Dec 2008) $}
-{$LastChangedRevision: 146 $}
-{$LastChangedBy: martin $}
-\svnid{$Id: example_main.tex 146 2008-12-03 13:29:19Z martin $}
-% Don't forget to set the svn property 'svn:keywords' to
-% 'HeadURL LastChangedDate LastChangedRevision LastChangedBy' or
-% 'Id' or both depending if you use \svnidlong and/or \svnid
-
-
-% Include keywords from the following external files and put them in the
-% 'external' group.
-% Note: this only works when the 'svn-multi.pl' is run on this file after it has
-% been compiled once AND the files below are part of a Subversion working
-% directory. The latter is not the case if this file is from the CTAN server.
-\svngroup{external}
-\svnexternalpath{{images/}}
-\svnexternal{{Makefile}{svn-multi.dtx}{svn-multi.ins}}
-\svngroup{}
-%
+\rcsid{$Id: example_main.tex,v 1.2 2008-12-03 13:29:19 martin Exp $}
 
 \usepackage{hyperref}
 \usepackage{url}
@@ -31,18 +11,18 @@
 \renewcommand{\footrulewidth}{0.4pt}
 \setlength{\headheight}{14.5pt}
 % This will display the last changed revision of the current chapter.
-% Change \svnkw{LastChangedRevision} to \svnrev if you like to have the
+% Change \rcskw{LastChangedRevision} to \rcsrev if you like to have the
 % document revision.
-\newcommand{\svnfooter}{Last Changed Rev: \svnkw{LastChangedRevision}}
+\newcommand{\rcsfooter}{Last Changed Rev: \rcskw{LastChangedRevision}}
 
 \pdfinfo{%
-  /CreationDate (D:\svnpdfdate)
+  /CreationDate (D:\rcspdfdate)
 }
 
-\svnRegisterAuthor{johnd}{John Doe}
-\svnRegisterAuthor{maryd}{Mary Doe}
-\svnRegisterAuthor{martin}{Martin S.}
-\svnRegisterRevision{15}{Version~1}
+\rcsRegisterAuthor{johnd}{John Doe}
+\rcsRegisterAuthor{maryd}{Mary Doe}
+\rcsRegisterAuthor{martin}{Martin S.}
+\rcsRegisterRevision{15}{Version~1}
 
 \usepackage{graphics}
 \graphicspath{{images/}}
@@ -58,18 +38,18 @@
  \vspace{8ex}
  {\huge Title\par}
  \vspace{2ex}
- {\large \noindent This is an example document for the \texttt{svn-multi} (aka
- \texttt{svnkw}) package. Please also look at the LaTeX source code of this
+ {\large \noindent This is an example document for the \texttt{rcs-multi} (aka
+ \texttt{rcskw}) package. Please also look at the LaTeX source code of this
  document.}
  \vfill
  \flushleft\sffamily
  Version control information:\\
- Head URL: \url{\svnkw{HeadURL}}\\
- Head URL: \svnnolinkurl{\svnkw{HeadURL}}\\
- Last changed date: \svndate\\
- Last changes revision: \svnrev\\
- Version: \svnFullRevision*{\svnrev}\\
- Last changed by: \svnFullAuthor*{\svnauthor}\\
+ Head URL: \url{\rcskw{HeadURL}}\\
+ Head URL: \rcsnolinkurl{\rcskw{HeadURL}}\\
+ Last changed date: \rcsdate\\
+ Last changes revision: \rcsrev\\
+ Version: \rcsFullRevision*{\rcsrev}\\
+ Last changed by: \rcsFullAuthor*{\rcsauthor}\\
 \end{titlepage}
 
 \tableofcontents
