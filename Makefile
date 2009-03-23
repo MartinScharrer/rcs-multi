@@ -54,10 +54,10 @@ fullclean:
 
 example: example.pdf
 
-example.pdf: example_main.tex example_chap1.tex ${PACKAGE}.sty
+example.pdf: example.tex ${PACKAGE}.sty
+	${RM} example_chap*.tex
 	${LATEX} $<
 	${LATEX} $<
-	mv example_main.pdf $@
 
 zip: fullclean package doc example tests ${ZIPFILE}
 ${PACKAGE}.zip: zip
