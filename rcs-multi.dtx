@@ -643,24 +643,6 @@
 % \end{macro}
 
 % \subsection{Definition of init values}
-% Initialisation of at least the revision to a numeric value is necessary to not
-% break the |\ifnum| tests later in this package. The revision is initialised to
-% -1, but will be set to 0 if an unexpanded |$||Rev:$| keyword is read. This way
-% it can be tested if a file had any keyword macros or not.\par
-% Note that there a two different macros for the document global keywords:\par
-% The user level |\rcs|\meta{kw} macros hold the global value and are only valid
-% after a \LaTeX\ run. They are initialised here and defined in the |.aux|
-% file which is read at the end of the package if it exists and written at the
-% end of the document.\par
-% The internal macros |\@rcs@|\meta{kw} store the oldest (i.e. highest revision)
-% keywords read so far from the \cs{rcsid} and \cs{rcsidlong} macros. They
-% change during the document and are used to produce the values of the
-% |\rcs|\meta{kw} macros when the |.aux| file is written.\par
-% Group wide macros are initialised when the group is first defined and have
-% three different macros: |\rcsg@|\meta{group}|@|\meta{kw} (defined in |.aux|),
-% |\@rcsg@|\meta{group}|@|\meta{kw} (accumulator) and also an access
-% macro |\rcscg|\meta{group} which uses
-% |\rcs@g|\meta{current group}|@|\meta{kw}.
 %    \begin{macrocode}
 % Init values
 \def\rcsrev{0.0}            \def\@rcs@rev{0.0}
@@ -672,8 +654,10 @@
 \def\rcshour{00}            \def\@rcs@hour{00}
 \def\rcsminute{00}          \def\@rcs@minute{00}
 \def\rcssecond{00}          \def\@rcs@second{00}
-\def\rcsmainfilename{NOT SET}
+\def\rcsmainfilename{}
+\def\rcsmainurl{\rcsmainfilename}
 \def\rcs@temp{}
+\def\rcs@lastkw{}
 
 \def\rcsfilerev{0.0}
 \def\rcsfiledate{}
@@ -684,8 +668,7 @@
 \def\rcsfilehour{00}
 \def\rcsfileminute{00}
 \def\rcsfilesecond{00}
-\def\rcsfiletimezonehour{+00}
-\def\rcsfiletimezoneminute{00}
+\def\rcsfileurl{}
 \def\rcsfilename{}
 %    \end{macrocode}
 %
@@ -749,7 +732,7 @@
 % \cs{@rcs@scandate} to extract the date information and \cs{@rcs@updateid} to
 % update global Id values and also sets the appropriate keywords.
 %    \begin{macrocode}
-\def\rcs@scanId#1 #2 #3 #4 #5 #6\relax{%
+\def\rcs@scanId#1,v #2 #3 #4 #5 #6\relax{%
   \@rcs@scandate{#3 #4}%
   \@rcs@updateid{#2}{#3 #4}{#5}{#1}%
   \rcskwdef{Filename}{#1}%
@@ -770,7 +753,8 @@
   \xdef\rcsfilerev{#1}%
   \xdef\rcsfiledate{#2}%
   \xdef\rcsfileauthor{#3}%
-  \xdef\rcsfilename{#4}%
+  \xdef\rcsfileurl{#4}%
+  \rcs@getfilename\rcsfileurl
 %    \end{macrocode}
 % Then we check if the revision is non-empty (not yet expanded by RCS?)
 % and larger then the current maximum value |\@rcs@rev|.  If yes we save all
@@ -811,6 +795,7 @@
   \xdef\@rcs@minute{\rcsfileminute}%
   \xdef\@rcs@second{\rcsfilesecond}%
   \xdef\@rcs@name{\rcsfilename}%
+  \xdef\@rcs@url{\rcsfileurl}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -875,11 +860,19 @@
     \rcskwsave@read#1\relax
   \endgroup
   \if@rcsidsw
-    \ifx\rcskwId\empty\else
-      \expandafter
-      \rcs@scanId\rcskwId\relax
-      \@rcsidswfalse
-    \fi
+    \rcs@ifequal{\rcs@lastkw}{Id}%
+      {\ifx\rcskwId\empty\else
+        \expandafter
+        \rcs@scanId\rcskwId\relax
+        \@rcsidswfalse
+      \fi}{%
+    \rcs@ifequal{\rcs@lastkw}{Header}%
+      {\ifx\rcskwHeader\empty\else
+        \expandafter
+        \rcs@scanId\rcskwHeader\relax
+        \@rcsidswfalse
+        \fi}{}%
+      }%
   \fi
   \ignorespaces
 }
@@ -913,6 +906,7 @@
 % \begin{macro}{\rcskwdef}[2]{key}{value}
 %    \begin{macrocode}
 \newcommand{\rcskwdef}[2]{%
+  \gdef\rcs@lastkw{#1}%
   \expandafter\xdef\csname rcskw#1\endcsname{#2}%
 }
 %    \end{macrocode}
@@ -922,7 +916,7 @@
 % We define default values for normal keywords. Keyword |Filename| is the name
 % given by |Id| and not a real keyword.
 %    \begin{macrocode} ^^A TODO: check if needed
-\rcskwdef{Rev}{0}
+\rcskwdef{Rev}{0.0}
 \rcskwdef{Date}{}
 \rcskwdef{Author}{}
 \rcskwdef{Filename}{}
@@ -1042,12 +1036,13 @@
 
 % \subsection{Mainfile Makros}
 % \begin{macro}{\rcssetmainfile}
-% Saves the current |HeadURL| and |Filename| keywords to macros.
+% Saves the current filename and URL to macros.
 % Will be called automatically in the preamble.
 % \changes{v1.2}{2007/06/22}{New macro}
 %    \begin{macrocode}
 \newcommand{\rcssetmainfile}{%
   \xdef\rcsmainfilename{\rcsfilename}%
+  \xdef\rcsmainfileurl{\rcsfileurl}%
 }
 \AtBeginDocument{\rcssetmainfile}
 %    \end{macrocode}
@@ -1241,6 +1236,7 @@
       \noexpand\gdef\noexpand\rcsminute{\@rcs@minute}^^J%
       \noexpand\gdef\noexpand\rcssecond{\@rcs@second}^^J%
       \noexpand\rcs@gdefverb\noexpand\rcsname{\@rcs@name}^^J%
+      \noexpand\rcs@gdefverb\noexpand\rcsurl{\@rcs@url}^^J%
     }%
 }
 %    \end{macrocode}
