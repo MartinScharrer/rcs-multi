@@ -452,7 +452,7 @@
 % All keywords saved with \cs{rcsid} or \cs{rcskwsave} can be typeset by this 
 % macro which is a holdover from a very early version of this 
 % package when multiple files where not supported.  It takes one argument which 
-% must be a subversion keyword name. It then returns the current value of this 
+% must be a RCS keyword name. It then returns the current value of this 
 % keyword or nothing (|\relax|) when the keyword was not set yet.
 % Examples:\\
 % \indent\indent |\textsl{Revision: \rcskw{Revision}}|\\
@@ -514,7 +514,7 @@
 % To adjust the language of your document use the \pkg{babel} package.
 %
 % \subsection{Using Full Author Names}
-% If you like to have the full author\footnote{This means subversion authors,
+% If you like to have the full author\footnote{This means RCS authors,
 % \eg the persons who commit changes into the rcs repository.} names, not only
 % the usernames, in your document you can use the following macros. First you
 % have to register all authors of the document with \cs{rcsRegisterAuthor} and
@@ -523,7 +523,7 @@
 %
 % \DescribeMacro{rcsRegisterAuthor}{\marg{author}\marg{full name}}
 % This macro registers \meta{full name} as full name for \meta{author} (a
-% subversion username) for later use with \cs{rcsFullAuthor}.
+% RCS username) for later use with \cs{rcsFullAuthor}.
 %
 % \DescribeMacro{rcsFullAuthor}{\marg{author name or macro}}
 % \DescribeMacro*{rcsFullAuthor*}{\marg{author name or macro}}
@@ -569,135 +569,11 @@
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Implementation}
 % \subsection{Package Header}
-% \subsubsection*{Package Identification}
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[1999/12/01]
 \ProvidesPackage{rcs-multi}
- [\filedate\space\fileversion\space SVN Keywords for multi-file LaTeX documents]
+ [\filedate\space\fileversion\space RCS Keywords for multi-file LaTeX documents]
 %    \end{macrocode}
-
-% \subsubsection*{Options}
-% Declaration of options and internal switches.
-%    \begin{macrocode}
-\RequirePackage{kvoptions}
-
-\SetupKeyvalOptions{%
-  family = rcs-multi,
-  prefix = @rcsmulti@
-}
-\newif\if@rcsmulti@anygraphic
-\newif\if@rcsmulti@autoload
-
-\DeclareVoidOption{old}{%
-  \@rcsmulti@verbatimtrue
-  \@rcsmulti@groupsfalse
-  \@rcsmulti@externalfalse
-  \@rcsmulti@graphicsfalse
-  \@rcsmulti@pgfimagesfalse
-  \@rcsmulti@autoloadfalse
-  \@rcsmulti@tablefalse
-  \@rcsmulti@filehooksfalse
-  \@rcsmulti@subgroupsfalse
-}
-\DeclareVoidOption{all}{%
-  \@rcsmulti@verbatimtrue
-  \@rcsmulti@groupstrue
-  \@rcsmulti@externaltrue
-  \@rcsmulti@graphicstrue
-  \@rcsmulti@pgfimagestrue
-  \@rcsmulti@autoloadtrue
-  \@rcsmulti@tabletrue
-  \@rcsmulti@filehookstrue
-  \@rcsmulti@subgroupstrue
-}
-\DeclareBoolOption[true]{verbatim}
-\DeclareBoolOption[false]{groups}
-\DeclareBoolOption[false]{external}
-\DeclareBoolOption[false]{subgroups}
-\DeclareBoolOption[false]{graphics}
-\DeclareBoolOption[false]{pgfimages}
-\DeclareStringOption{autoload}[true]
-\DeclareBoolOption[false]{table}
-\DeclareBoolOption[false]{filehooks}
-
-\ExecuteOptions{old}
-\ProcessKeyvalOptions{rcs-multi}
-%    \end{macrocode}
-%
-% Enable dependent options:
-%    \begin{macrocode}
-\def\rcs@depoption#1{%
-  \csname if@rcsmulti@#1\endcsname\else
-  \message{rcs-multi: Required option '#1' enabled.}%
-  \csname @rcsmulti@#1true\endcsname
-  \fi
-}
-
-\if@rcsmulti@groups
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@external
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@subgroups
-  \rcs@depoption{groups}
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@graphics
-  \rcs@depoption{external}
-  \rcs@depoption{autoload}
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@pgfimages
-  \rcs@depoption{external}
-  \rcs@depoption{autoload}
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@autoload
-  \rcs@depoption{external}
-  \rcs@depoption{filehooks}
-\fi
-\if@rcsmulti@table
-  \rcs@depoption{groups}
-  \rcs@depoption{filehooks}
-\fi
-%    \end{macrocode}
-%
-% Check if \op{autoload} was set explicitly and obey the value.
-%    \begin{macrocode}
-\ifx\@rcsmulti@autoload\@undefined
-\else
-\ifx\@rcsmulti@autoload\empty
-\else
-\def\rcs@temp{true}
-\ifx\@rcsmulti@autoload\rcs@temp
-  \@rcsmulti@autoloadtrue
-  \rcs@depoption{external}
-  \rcs@depoption{filehooks}
-\else
-\def\rcs@temp{false}
-\ifx\@rcsmulti@autoload\rcs@temp
-  \if@rcsmulti@autoload
-  \PackageWarning{rcs-multi}{Option 'autoload' disabled.}
-  \fi
-  \@rcsmulti@autoloadfalse
-\else
-  \PackageError{rcs-multi}%
-    {Invalid value for 'autoload' option: '\@rcsmulti@autoload'^^J%
-     ! Only 'true','false' or empty (='true') are allowed!}
-\fi\fi\fi\fi
-%    \end{macrocode}
-
-% General switch if any graphic option is enabled:
-%    \begin{macrocode}
-\if@rcsmulti@graphics
-  \@rcsmulti@anygraphictrue
-\fi
-\if@rcsmulti@pgfimages
-  \@rcsmulti@anygraphictrue
-\fi
-%    \end{macrocode}
-%
 
 % \subsection{General Internal Macros}
 % Some internal used macro which don't fit in any other section.
@@ -765,43 +641,6 @@
 }
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\rcs@input}[1]{file name/path}
-% Macro to load |.svx| and |.svt| files.  The current keyword group is saved
-% away and restored after the |.svx| file is loaded.  The macros |\IfFileExists|
-% with |\@@input| are used because |\InputIfFileExists| got redefined by the
-% \pkg{fink} package and there is no need to use \pkg{fink} for this files.
-%    \begin{macrocode}
-\def\rcs@input#1{%
-  \begingroup
-    \let\rcs@rg\rcs@g
-    \IfFileExists{#1}{\@@input #1\relax}{}%
-    \global\let\rcs@g\rcs@rg
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\rcs@inputsvx}[1]{file name/path without extension}
-% Used to save and restore file keywords when reading |.svx| files.
-%    \begin{macrocode}
-\def\rcs@inputsvx#1{%
-  \rcs@pushfilestack
-  \rcs@input{#1.svx}%
-  \rcs@popfilestack
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\@namexdef}[1]{macro name}
-% Provides an expanding and global version of |\@namedef|.
-%    \begin{macrocode}
-\providecommand\@namexdef[1]{%
-  \expandafter\xdef\csname #1\endcsname
-}
-%    \end{macrocode}
-% \end{macro}
-%
 
 % \subsection{Definition of init values}
 % Initialisation of at least the revision to a numeric value is necessary to not
@@ -810,21 +649,21 @@
 % it can be tested if a file had any keyword macros or not.\par
 % Note that there a two different macros for the document global keywords:\par
 % The user level |\rcs|\meta{kw} macros hold the global value and are only valid
-% after a \LaTeX\ run. They are initialised here and defined in the |.rcs|
+% after a \LaTeX\ run. They are initialised here and defined in the |.aux|
 % file which is read at the end of the package if it exists and written at the
 % end of the document.\par
 % The internal macros |\@rcs@|\meta{kw} store the oldest (i.e. highest revision)
 % keywords read so far from the \cs{rcsid} and \cs{rcsidlong} macros. They
 % change during the document and are used to produce the values of the
-% |\rcs|\meta{kw} macros when the |.rcs| file is written.\par
+% |\rcs|\meta{kw} macros when the |.aux| file is written.\par
 % Group wide macros are initialised when the group is first defined and have
-% three different macros: |\rcsg@|\meta{group}|@|\meta{kw} (defined in |.rcs|),
+% three different macros: |\rcsg@|\meta{group}|@|\meta{kw} (defined in |.aux|),
 % |\@rcsg@|\meta{group}|@|\meta{kw} (accumulator) and also an access
 % macro |\rcscg|\meta{group} which uses
 % |\rcs@g|\meta{current group}|@|\meta{kw}.
 %    \begin{macrocode}
 % Init values
-\def\rcsrev{-1}             \def\@rcs@rev{-1}
+\def\rcsrev{0.0}            \def\@rcs@rev{0.0}
 \def\rcsdate{}              \def\@rcs@date{}
 \def\rcsauthor{}            \def\@rcs@author{}
 \def\rcsyear{0000}          \def\@rcs@year{0000}
@@ -833,71 +672,26 @@
 \def\rcshour{00}            \def\@rcs@hour{00}
 \def\rcsminute{00}          \def\@rcs@minute{00}
 \def\rcssecond{00}          \def\@rcs@second{00}
-\def\rcstimezonehour{+00}   \def\@rcs@timezonehour{+00}
-\def\rcstimezoneminute{00}  \def\@rcs@timezoneminute{00}
-\def\rcsmainurl{NOT SET}    \def\rcsmainfilename{NOT SET}
-\def\rcsurl{} \def\rcsfname{}
+\def\rcsmainfilename{NOT SET}
 \def\rcs@temp{}
 
-\def\rcs@pg{} \def\rcs@g{} \def\rcs@cg{\rcs@g}
-\let\@rcsg@@files\relax
-
-\def\rcs@initfile{%
-  \gdef\rcsfilerev{-1}%
-  \gdef\rcsfiledate{}%
-  \gdef\rcsfileauthor{}%
-  \gdef\rcsfileyear{0000}%
-  \gdef\rcsfilemonth{00}%
-  \gdef\rcsfileday{00}%
-  \gdef\rcsfilehour{00}%
-  \gdef\rcsfileminute{00}%
-  \gdef\rcsfilesecond{00}%
-  \gdef\rcsfiletimezonehour{+00}%
-  \gdef\rcsfiletimezoneminute{00}%
-  \gdef\rcsfileurl{}%
-  \gdef\rcsfilefname{}%
-}
-\rcs@initfile
+\def\rcsfilerev{0.0}
+\def\rcsfiledate{}
+\def\rcsfileauthor{}
+\def\rcsfileyear{0000}
+\def\rcsfilemonth{00}
+\def\rcsfileday{00}
+\def\rcsfilehour{00}
+\def\rcsfileminute{00}
+\def\rcsfilesecond{00}
+\def\rcsfiletimezonehour{+00}
+\def\rcsfiletimezoneminute{00}
+\def\rcsfilename{}
 %    \end{macrocode}
 %
-% \subsection{Timezone macros}
-% \begin{macro}{\rcstimezone}
-% \begin{macro}{\rcsfiletimezone}
-% \begin{macro}{\rcscgtimezone}
-% These macros return the global, file-local and current group time zones,
-% respectively. Since v1.4 the minute part is returned as well and the macro
-% removes manually added |00| after it to support older documents.
-% \changes{v1.4}{2009/02/27}{Return now full timezone (hour + minute part).
-% Manually added 00 minutes are removed.}
-%    \begin{macrocode}
-\def\rcstimezone{\rcstimezonehour\rcstimezoneminute\rcs@gobblezeros}
-\def\rcsfiletimezone{\rcsfiletimezonehour\rcsfiletimezoneminute\rcs@gobblezeros}
-\def\rcscgtimezone{\rcscgtimezonehour\rcscgtimezoneminute}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
 
-% \begin{macro}{\rcs@gobblezeros}
-% \begin{macro}{\rcs@gobblezeros@}
-% This two cascaded macros remove a trailing |00| and are used by
-% \cs{rcsfiletimezone} and \cs{rcstimezone}.
-%    \begin{macrocode}
-\def\rcs@gobblezeros{%
-  \futurelet\rcs@nextchar\rcs@gobblezeros@
-}
-\def\rcs@gobblezeros@{%
-  \let\@tempa=\relax
-  \def\@tempb{0}%
-  \ifx0\rcs@nextchar
-    \let\@tempa=\@gobbletwo
-  \fi
-  \@tempa
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-
+% \subsection{Time and \textit{Today} macros}
+%
 % \begin{macro}{\rcstime}
 % \begin{macro}{\rcsfiletime}
 % \begin{macro}{\rcscgtime}
@@ -911,10 +705,9 @@
 % \end{macro}
 % \end{macro}
 
-% \subsection{\textit{Today} macros}
 % These macros use the |\today| macro to typeset the current date using the
 % local language settings. Thanks and credit goes to Manuel P\'egouri\'e-Gonnard
-% for suggesting this feature and for providing the code.
+% for suggesting this feature and for providing some code.
 % \begin{macro}{\rcstoday}
 %    \begin{macrocode}
 \newcommand*{\rcstoday}{%
@@ -936,22 +729,8 @@
 }
 %    \end{macrocode}
 % \end{macro}
-%
-% \begin{macro}{\rcscgtoday}
-%    \begin{macrocode}
-\newcommand*{\rcscgtoday}{%
-  \@ifundefined{rcsg@\rcs@cg @year}{??}{%
-    \begingroup
-      \year\rcscgyear \month\rcscgmonth \day\rcscgday
-      \relax \today
-    \endgroup
-  }%
-}%
-%    \end{macrocode}
-% \end{macro}
 
-% \subsection{Id macros}
-% \subsubsection{Normal Id}
+% \subsection{Id macro}
 % \begin{macro}{\rcsid}
 % Calls \cs{rcskwsave} with |\@rcsidswtrue| so that the Id keyword will be
 % parsed at the end of \cs{rcskwsave}.
@@ -966,14 +745,14 @@
 % \end{macro}
 %
 
-% \begin{macro}{\rcs@scanId}[5]{file name}{revision}{date (YYYY-MM-DD)}{time
-% (HH:MM:SSZ)}{author (username)}
+% \begin{macro}{\rcs@scanId}[6]{file name}{revision}{date (YYYY-MM-DD)}{time
+% (HH:MM:SS)}{author (username)}{rest}
 % Scans rcs Id (after it got parsed by \cs{rcskwsave}).  Awaits only Id value
 % without leading `|Id:|' and a trailing |\relax| as end marker.  It calls
 % \cs{@rcs@scandate} to extract the date information and \cs{@rcs@updateid} to
 % update global Id values and also sets the appropriate keywords.
 %    \begin{macrocode}
-\def\rcs@scanId#1 #2 #3 #4 #5\relax{%
+\def\rcs@scanId#1 #2 #3 #4 #5 #6\relax{%
   \@rcs@scandate{#3 #4}%
   \@rcs@updateid{#2}{#3 #4}{#5}{#1}%
   \rcskwdef{Filename}{#1}%
@@ -994,77 +773,51 @@
   \xdef\rcsfilerev{#1}%
   \xdef\rcsfiledate{#2}%
   \xdef\rcsfileauthor{#3}%
-  \xdef\rcsfileurl{#4}%
-  \rcs@getfilename\rcsfileurl%
+  \xdef\rcsfilename{#4}%
 %    \end{macrocode}
-% Then we check if the revision is non-empty (not yet expanded by subversion?)
+% Then we check if the revision is non-empty (not yet expanded by RCS?)
 % and larger then the current maximum value |\@rcs@rev|.  If yes we save all
-% value to save them in the .rcs-file later.
+% value to save them in the .aux-file later.
 %    \begin{macrocode}
-  \ifx\rcsfilerev\empty\else
-    \ifnum\@rcs@rev<\rcsfilerev
-      \xdef\@rcs@rev{\rcsfilerev}%
-      \xdef\@rcs@date{\rcsfiledate}%
-      \xdef\@rcs@author{\rcsfileauthor}%
-      \xdef\@rcs@year{\rcsfileyear}%
-      \xdef\@rcs@month{\rcsfilemonth}%
-      \xdef\@rcs@day{\rcsfileday}%
-      \xdef\@rcs@hour{\rcsfilehour}%
-      \xdef\@rcs@minute{\rcsfileminute}%
-      \xdef\@rcs@second{\rcsfilesecond}%
-      \xdef\@rcs@timezonehour{\rcsfiletimezonehour}%
-      \xdef\@rcs@timezoneminute{\rcsfiletimezoneminute}%
-      \xdef\@rcs@url{\rcsfileurl}%
-      \xdef\@rcs@fname{\rcsfilefname}%
-    \fi
-
-    \if@rcsmulti@groups
-      \ifx\rcs@g\empty\else
-        \rcs@updategroup{\rcs@g}%
-      \fi
-      \if@rcsmulti@subgroups
-        \ifrcssubgroups
-          \rcs@updategroup{\rcs@filedir\rcs@filebase}%
+  \ifx\rcsfiledate\empty\else
+    \begingroup
+      \edef\@tempa{\@rcs@year\@rcs@month\@rcs@day}
+      \edef\@tempb{\rcsfileyear\rcsfilemonth\rcsfileday}
+      \ifnum\@tempa<\@tempb
+        \rcs@update
+      \else\ifnum\@tempa=\@tempb
+        \edef\@tempa{\@rcs@hour\@rcs@minute\@rcs@second}
+        \edef\@tempb{\rcsfilehour\rcsfileminute\rcsfilesecond}
+        \ifnum\@tempa<\@tempb
+          \rcs@update
         \fi
-      \fi
-    \fi
+      \fi\fi
+    \endgroup
   \fi
 }
-
-\def\@rcscg@save#1#2{%
-  \expandafter\xdef\csname @rcsg@\rcs@g @#1\endcsname{#2}%
-}
-
 %    \end{macrocode}
 % \end{macro}
 %
 
-% \subsubsection{Long Id}
-% \begin{macro}{\rcsidlong}
-% We clear the keyword value first to reduce the risk though bad user input.
+% \begin{macro}{\rcs@updateid}
+% Updates the max-hold macros with the values of the current file VC 
+% information.
 %    \begin{macrocode}
-\newcommand{\rcsidlong}{%
-  \rcskwdef{HeadURL}{}%
-  \rcskwdef{LastChangedDate}{}%
-  \rcskwdef{LastChangedRevision}{0}%
-  \rcskwdef{LastChangedBy}{}%
-%    \end{macrocode}
-% The catcodes are changed by \cs{rcs@catcodes} to allow \TeX-special characters
-% inside the keywords.  The braces |{ }| are changed to allow comments between
-% the arguments.  \cs{rcsidlong@readargsfull} is called to read the arguments.
-%    \begin{macrocode}
-  \begingroup
-    \if@rcsmulti@verbatim
-      \rcs@catcodes
-      \catcode`\{=12
-      \catcode`\}=12
-    \else
-      \def\rcsidlong@readargsfull{\rcsidlong@readargs}%
-    \fi
-    \rcsidlong@readargsfull
+\def\rcs@update{%
+  \xdef\@rcs@rev{\rcsfilerev}%
+  \xdef\@rcs@date{\rcsfiledate}%
+  \xdef\@rcs@author{\rcsfileauthor}%
+  \xdef\@rcs@year{\rcsfileyear}%
+  \xdef\@rcs@month{\rcsfilemonth}%
+  \xdef\@rcs@day{\rcsfileday}%
+  \xdef\@rcs@hour{\rcsfilehour}%
+  \xdef\@rcs@minute{\rcsfileminute}%
+  \xdef\@rcs@second{\rcsfilesecond}%
+  \xdef\@rcs@name{\rcsfilename}%
 }
 %    \end{macrocode}
 % \end{macro}
+%
 
 % \begin{macro}{\rcs@catcodes}
 % Changes all \TeX-special character to category ``other''. The newline aka
@@ -1086,56 +839,31 @@
 %    \end{macrocode}
 % \end{macro}
 
-% \begin{macro}{\rcsidlong@readargsfull}[8]
-% {some text, ignored}{Keyword 1}
-% {some text, ignored}{Keyword 2}
-% {some text, ignored}{Keyword 3}
-% {some text, ignored}{Keyword 4}
-% Reads all four arguments of \cs{rcsidlong} and passes them to
-% \cs{rcsidlong@readargs}. The normal argument braces are changed to category
-% ``other'' and put into the macros parameter text to remove all code between
-% them. This is done to avoid problems with comments direct after one of the
-% arguments. Because the braces are now non-special the parentheses are made to
-% a local replacement.
-%
+% \begin{macro}{\rcs@gdefverb}[1]{macro}
 %    \begin{macrocode}
-\if@rcsmulti@verbatim
-\begingroup
-\catcode`\{=12\catcode`\}=12
-\catcode`\(=1\catcode`\)=2
-\gdef\rcsidlong@readargsfull#1{#2}#3{#4}#5{#6}#7{#8}(%
- \rcsidlong@readargs(#2)(#4)(#6)(#8)%
-)
-\endgroup
-\fi
+\def\rcs@gdefverb#1{%
+  \begingroup
+    \def\rcs@temp{#1}%
+    \begingroup
+      \if@rcsmulti@verbatim
+        \rcs@catcodes
+      \fi
+      \rcs@gdefverb@
+}
 %    \end{macrocode}
 % \end{macro}
 
-% \begin{macro}{\rcsidlong@readargs}[4]{Keyword 1}{Keyword 2}{Keyword 3}
-% {Keyword 4}
-% Calls sub macro for all four arguments and ends the catcode changes made
-% by \cs{rcsidlong}.
+% \begin{macro}{\rcs@defverb@}[1]{verbatim stuff}
 %    \begin{macrocode}
-\def\rcsidlong@readargs#1#2#3#4{%
-    \rcskwsave@read #1\relax
-    \rcskwsave@read #2\relax
-    \rcskwsave@read #3\relax
-    \rcskwsave@read #4\relax
+\def\rcs@gdefverb@#1{%
+    \endgroup
+    \expandafter\gdef\rcs@temp{#1}%
   \endgroup
-%    \end{macrocode}
-% Now the update macros for date and id are called.
-%    \begin{macrocode}
-  \ifx\rcskwLastChangedDate\empty\else
-    \@rcs@scanlongdate{\rcskwLastChangedDate}%
-  \fi
-  \@rcs@updateid{\rcskw{LastChangedRevision}}{\rcskw{LastChangedDate}}%
-  {\rcskw{LastChangedBy}}{\rcskw{HeadURL}}%
-  \ignorespaces
-}%
+}
 %    \end{macrocode}
 % \end{macro}
 
-% \subsection{KeyWord Macros}
+% \subsection{Keyword Macros}
 % \begin{macro}{\rcskwsave}
 % Enabled verbatim mode and uses a sub macro to read the arguments afterwards.
 %    \begin{macrocode}
@@ -1194,82 +922,17 @@
 % \end{macro}
 
 % \begin{macro}{\rcskwdef}[2]{key}{value}
-% First we check if there is a `setter'-macro for the keyword called
-% \cs{rcskwdef@}\meta{keyword}.
 %    \begin{macrocode}
 \newcommand{\rcskwdef}[2]{%
-  \@ifundefined{rcskwdef@#1}%
-%    \end{macrocode}
-% If not we call the general macro \cs{rcskwdef@}.
-%    \begin{macrocode}
-    {\rcskwdef@{#1}{#2}}%
-%    \end{macrocode}
-% If yes we just call it with the value as argument.
-%    \begin{macrocode}
-    {\csname rcskwdef@#1\endcsname{#2}}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcskwdef@}[2]{key}{value}
-% This macro defines the second argument under \cs{rcskw}\meta{1st argument}.
-% The |\xdef| is used to expand the content first (needed for internal use) and
-% make the definition globally.
-%    \begin{macrocode}
-\newcommand{\rcskwdef@}[2]{%
   \expandafter\xdef\csname rcskw#1\endcsname{#2}%
 }
 %    \end{macrocode}
-% Example: |\rcskwdef{Revision}{23}| will define |\rcskwRevision| as 23.
-% \end{macro}
-
-% \begin{macro}{\rcskwdef@Rev}
-% \begin{macro}{\rcskwdef@Author}
-% \begin{macro}{\rcskwdef@Date}
-% \begin{macro}{\rcskwdef@URL}[1]{value}
-% `Setter'-macros for single keywords, used by \cs{rcskwdef}.\\ These are needed
-% to have have a common value for all alternative keyword names ala |Rev|,
-% |Revision|, |LastChangedRevision|.
-%
-% The keywords |Author| and |Date| are just calling \cs{rcskwdef@} with a fixed
-% first argument.  For the revision the value is checked if empty and then a 0
-% is substituted.
-%    \begin{macrocode}
-\def\rcskwdef@Rev#1{%
-  \rcs@ifempty{#1}%
-    {\rcskwdef@{Rev}{0}}%
-    {\rcskwdef@{Rev}{#1}}%
-}
-\def\rcskwdef@Author#1{\rcskwdef@{Author}{#1}}
-\def\rcskwdef@Date#1{\rcskwdef@{Date}{#1}}
-\def\rcskwdef@URL#1{\rcskwdef@{HeadURL}{#1}}
-%    \end{macrocode}
-% The long keywords are defined then as aliases of the short,\\
-% first for writing
-%    \begin{macrocode}
-\let\rcskwdef@Revision=\rcskwdef@Rev
-\let\rcskwdef@LastChangedRevision=\rcskwdef@Rev
-\let\rcskwdef@LastChangedBy=\rcskwdef@Author
-\let\rcskwdef@LastChangedAt=\rcskwdef@Date
-%    \end{macrocode}
-% and then for reading.
-%    \begin{macrocode}
-\def\rcskwRevision{\rcskwRev}
-\def\rcskwLastChangedRevision{\rcskwRev}
-\def\rcskwLastChangedBy{\rcskwAuthor}
-\def\rcskwLastChangedAt{\rcskwDate}
-\def\rcskwURL{\rcskwHeadURL}
-%    \end{macrocode}
-% So \eg |\rcskw{LastChangedRevision}| is always be the
-% same as |\rcskw{Rev}|.
-% \end{macro}
-% \end{macro}
-% \end{macro}
+% Example: |\rcskwdef{Rev}{2.3}| will define |\rcskwRev| as `|2.3|'.
 % \end{macro}
 
 % We define default values for normal keywords. Keyword |Filename| is the name
 % given by |Id| and not a real keyword.
-%    \begin{macrocode}
+%    \begin{macrocode} ^^A TODO: check if needed
 \rcskwdef{Rev}{0}
 \rcskwdef{Date}{}
 \rcskwdef{Author}{}
@@ -1288,7 +951,7 @@
 %    \begin{macrocode}
 \newcommand{\rcskw}[1]{%
   \@ifundefined{rcskw#1}%
-    {\PackageWarning{rcs-multi}{SVN keyword '#1' not defined (typo?)}}%
+    {\PackageWarning{rcs-multi}{RCS keyword '#1' not defined (typo?)}}%
     {\csname rcskw#1\endcsname}%
 }%
 %    \end{macrocode}
@@ -1360,52 +1023,12 @@
 %    \end{macrocode}
 % \end{macro}
 
-% \begin{macro}{\rcs@gdefverb}[1]{macro}
-%    \begin{macrocode}
-\def\rcs@gdefverb#1{%
-  \begingroup
-    \def\rcs@temp{#1}%
-    \begingroup
-      \if@rcsmulti@verbatim
-        \rcs@catcodes
-      \fi
-      \rcs@gdefverb@
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@defverb@}[1]{verbatim stuff}
-%    \begin{macrocode}
-\def\rcs@gdefverb@#1{%
-    \endgroup
-    \expandafter\gdef\rcs@temp{#1}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@namegdefverb}[1]{macro name}
-%    \begin{macrocode}
-\def\rcs@namegdefverb#1{%
-  \begingroup
-    \expandafter\def
-    \expandafter\rcs@temp
-    \expandafter{\csname #1\endcsname}%
-    \begingroup
-      \if@rcsmulti@verbatim
-        \rcs@catcodes
-      \fi
-      \rcs@gdefverb@
-}
-%    \end{macrocode}
-% \end{macro}
-
 
 % \subsection{Date Macros}
 % \begin{macro}{\@rcs@scandate}[1]{date}
 % Scans data information in Id keyword and saves them in macros.
 %    \begin{macrocode}
-\def\@rcs@scandate#1{\@rcs@scandate@#1\relax}
+\def\@rcs@scandate#1{\@rcs@scandate@#1\empty\relax}
 
 \def\@rcs@scandate@#1-#2-#3 #4:#5:#6#7#8\relax{%
   \gdef\rcsfileyear{#1}%
@@ -1414,37 +1037,6 @@
   \gdef\rcsfilehour{#4}%
   \gdef\rcsfileminute{#5}%
   \gdef\rcsfilesecond{#6#7}%
-  \gdef\rcsfiletimezonehour{+00}%
-  \gdef\rcsfiletimezoneminute{00}% #8 always 'Z' for Zulu-time (UTC)
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\@rcs@scanlongdate}[8]{Year}{Month}{Day}{Hour}{Minute}{Second}
-% {Timezone}{Date description string (ignored)}
-% Scans date information in Date keyword and saves them in macros.
-%    \begin{macrocode}
-\def\@rcs@scanlongdate#1{\expandafter\@rcs@scanlongdate@#1\relax}
-%
-\def\@rcs@scanlongdate@#1-#2-#3 #4:#5:#6 #7 #8\relax{%
-  \gdef\rcsfileyear{#1}%
-  \gdef\rcsfilemonth{#2}%
-  \gdef\rcsfileday{#3}%
-  \gdef\rcsfilehour{#4}%
-  \gdef\rcsfileminute{#5}%
-  \gdef\rcsfilesecond{#6}%
-  \@rcs@parsetimezone#7\relax%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\@rcs@parsetimezone}[5]{sign (+/-)}{hour first digit}{hour
-% second digit}{minute first digit}{minute second digit}
-% Scans timezone and splits hour and minute part.
-%    \begin{macrocode}
-\def\@rcs@parsetimezone#1#2#3#4#5\relax{%
-  \gdef\rcsfiletimezonehour{#1#2#3}%
-  \gdef\rcsfiletimezoneminute{#4#5}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1454,7 +1046,7 @@
 %    \begin{macrocode}
 \def\rcspdfdate{%
   \rcsyear\rcsmonth\rcsday
-  \rcshour\rcsminute\rcssecond\rcstimezonehour'\rcstimezoneminute'%
+  \rcshour\rcsminute\rcssecond00'00'%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1466,8 +1058,7 @@
 % \changes{v1.2}{2007/06/22}{New macro}
 %    \begin{macrocode}
 \newcommand{\rcssetmainfile}{%
-  \xdef\rcsmainurl{\rcsfileurl}%
-  \xdef\rcsmainfilename{\rcsfilefname}%
+  \xdef\rcsmainfilename{\rcsfilename}%
 }
 \AtBeginDocument{\rcssetmainfile}
 %    \end{macrocode}
@@ -1585,1253 +1176,14 @@
 %    \end{macrocode}
 % \end{macro}
 
-% \subsection{Input File Name}
-% The \pkg{fink} package is used to get the input file names. AtBegin/AtEnd 
-% hooks are installed which will be used later.
-%    \begin{macrocode}
-\if@rcsmulti@filehooks
-%    \end{macrocode}
-
-% Load \pkg{fink} package and check if all needed macros are provided.
-%    \begin{macrocode}
-\RequirePackage{fink}[2008/02/27]
-\begingroup
-\def\rcs@finkerror{%
-\PackageError{rcs-multi}{Your installed version of the 'fink' package does not
-provide the needed macros. It is either too old or too new.
-Try a different version, e.g. v2.1.1 from 2008/02/27}{}%
-\let\rcs@finkerror\relax
-}
-\@ifundefined{finkpath}{\rcs@finkerror}{}%
-\@ifundefined{finkdir}{\rcs@finkerror}{}%
-\@ifundefined{finkbase}{\rcs@finkerror}{}%
-\@ifundefined{fink@prepare}{\rcs@finkerror}{}%
-\@ifundefined{fink@restore}{\rcs@finkerror}{}%
-\@ifundefined{fnk@maindir}{\rcs@finkerror}{}%
-\@ifundefined{fnk@mainext}{\rcs@finkerror}{}%
-\endgroup
-%    \end{macrocode}
-
-% \begin{macro}{\rcs@removedotslash}[1]{string (\eg file path) which might start
-% with \texttt{./}}
-% Removes leading './' from given macro (holding a directory path). Awaits a
-% macro as argument which is redefined inside the current group!
-%    \begin{macrocode}
-\def\rcs@removedotslash#1{%
-  \def\rcs@removedotslash@##1##2##3\relax{%
-    \rcs@ifequal{./}{##1##2}%
-      {\edef#1{##3}\def\next{\rcs@removedotslash@##3\empty\empty\empty\relax}}%
-      {\edef#1{##1##2##3}\let\next\relax}%
-    \next
-  }%
-  \expandafter\rcs@removedotslash@#1\empty\empty\empty\relax
-}
-%    \end{macrocode}
-% \end{macro}
-
-% Init values for file name macros.
-%    \begin{macrocode}
-\let\rcs@mainext\fnk@mainext
-\let\rcs@maindir\fnk@maindir
-\rcs@removedotslash\rcs@maindir
-\edef\rcs@filebase{\jobname}%
-\edef\rcs@fileext{\rcs@mainext}%
-\edef\rcs@filedir{\rcs@maindir}%
-%    \end{macrocode}
-% Filename and -path are build using the other macros:
-%    \begin{macrocode}
-\def\rcs@filename{\fink@file\rcs@filebase\rcs@fileext}%
-\def\rcs@filepath{\rcs@filedir\rcs@filename}%
-%    \end{macrocode}
-
-% \begin{macro}{\rcsmulti@begininputfilehook}
-% This hook is installed in the |\fink@prepare| macro from the \pkg{fink}
-% package which will be executed at the begin of a input file. The file name and
-% path are not yet in |\finkpath| etc. but in |\fink@nextpath|.
-%    \begin{macrocode}
-\def\rcsmulti@begininputfilehook{}
-\message{Package rcs-multi: patching macro '\string\fink@prepare' from the
-'fink' package!}%
-\let\rcsmulti@fink@prepare\fink@prepare
-\renewcommand*{\fink@prepare}[1]{%
-  \rcsmulti@fink@prepare{#1}%
-  \if@rcsmulti@groups
-    \rcs@ifequal{\rcs@filepath}{\jobname.\rcs@mainext}%
-      {\global\let\rcs@pg\rcs@g}%
-      {\xdef\rcs@pg{\rcs@filedir\rcs@filebase}}%
-  \fi
-  \xdef\rcs@filebase{\fink@nextbase}%
-  \xdef\rcs@fileext{\fink@nextext}%
-  \xdef\rcs@filedir{\fink@nextdir}%
-  \rcs@removedotslash\rcs@filedir
-  \rcsmulti@begininputfilehook
-}%
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsmulti@endinputfilehook}
-% This hook is installed in the |\fink@restore| macro from the \pkg{fink}
-% package which will be executed at the end of a input file. The file path
-% |\finkpath| etc. is still valid.
-%    \begin{macrocode}
-\def\rcsmulti@endinputfilehook{}
-\message{Package rcs-multi: patching macro '\string\fink@restore' from the
-'fink' package!}%
-\let\rcsmulti@fink@restore\fink@restore
-\def\fink@restore#1{%
-  \rcsmulti@endinputfilehook
-  \rcsmulti@fink@restore{#1}%
-  \xdef\rcs@filebase{\finkbase}%
-  \xdef\rcs@fileext{\finkext}%
-  \xdef\rcs@filedir{\finkdir}%
-  \rcs@removedotslash\rcs@filedir
-}%
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsmulti@atbegininputfile}
-% This macro adds the argument to the end of the \cs{rcsmulti@begininputfilehook}.
-%    \begin{macrocode}
-\def\rcsmulti@atbegininputfile{%
-  \g@addto@macro\rcsmulti@begininputfilehook
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsmulti@atendinputfile}
-% This macro adds the argument to the \emph{begin} of the
-% \cs{rcsmulti@endinputfilehook}. This ensures that code added first is more at
-% the end than code added later.
-% The code below was adapted from the definition of the \LaTeX2e macro
-% |\g@addto@macro| which was used above.
-%    \begin{macrocode}
-\long\def\rcsmulti@atendinputfile#1{%
-  \begingroup
-    \@temptokena\expandafter{\rcsmulti@endinputfilehook}%
-    \toks@{#1}%
-    \xdef\rcsmulti@endinputfilehook{\the\toks@\the\@temptokena}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-%    \begin{macrocode}
-\def\rcs@filestack{{}}
-
-\def\rcs@pushfilestack{%
-  \xdef\rcs@filestack{{%
-    {\rcsfilerev}%
-    {\rcsfiledate}%
-    {\rcsfileauthor}%
-    {\rcsfileyear}%
-    {\rcsfilemonth}%
-    {\rcsfileday}%
-    {\rcsfilehour}%
-    {\rcsfileminute}%
-    {\rcsfilesecond}%
-    {\rcsfiletimezonehour}%
-    {\rcsfiletimezoneminute}%
-    {\rcsfileurl}%
-    {\rcsfilefname}%
-    {\rcs@g}%
-    {\rcs@pg}%
-  }\rcs@filestack}%
-}
-
-\def\rcs@restorefilekws#1#2\relax{%
-  \rcs@restorefilekws@#1\empty
-  \empty \empty \empty \empty
-  \empty \empty \empty \empty
-  \empty \empty \empty \empty
-  \rcs@ifempty{#2}%
-    {\gdef\rcs@filestack{{}}}%
-    {\gdef\rcs@filestack{#2}}%
-}
-\def\rcs@restorefilekws@#1#2#3#4#5#6#7#8#9{%
-  \gdef\rcsfilerev{#1}%
-  \gdef\rcsfiledate{#2}%
-  \gdef\rcsfileauthor{#3}%
-  \gdef\rcsfileyear{#4}%
-  \gdef\rcsfilemonth{#5}%
-  \gdef\rcsfileday{#6}%
-  \gdef\rcsfilehour{#7}%
-  \gdef\rcsfileminute{#8}%
-  \gdef\rcsfilesecond{#9}%
-  \rcs@restorefilekws@@
-}
-
-\def\rcs@restorefilekws@@#1#2#3#4#5#6{%
-  \gdef\rcsfiletimezonehour{#1}%
-  \gdef\rcsfiletimezoneminute{#2}%
-  \gdef\rcsfileurl{#3}%
-  \gdef\rcsfilefname{#4}%
-  \gdef\rcs@g{#5}%
-  \gdef\rcs@pg{#6}%
-}
-
-\def\rcs@popfilestack{%
-  \ifx\rcs@filestack\empty
-    \PackageWarning{rcs-multi}{Underflow of file keyword stack!}%
-  \else
-    \rcs@ifequal{\rcs@filestack}{{}}%
-      {\PackageWarning{rcs-multi}{Underflow of file keyword stack!}}%
-      {\expandafter\rcs@restorefilekws\rcs@filestack\relax}%
-  \fi
-}
-
-\rcsmulti@atbegininputfile{%
-  \rcs@pushfilestack
-}
-
-\rcsmulti@atendinputfile{%
-  \rcs@popfilestack
-}%
-%
-%    \end{macrocode}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-% \subsection{Keyword Group Macros}
-% These macros implement the user interface for the keyword group functionality
-% introduced with v2.0.
-%
-% The list of keyword groups |\rcs@glist| is initial set empty and will be
-% filled by \cs{rcsgroup}.
-%    \begin{macrocode}
-\if@rcsmulti@groups
-\let\rcs@glist=\empty
-%    \end{macrocode}
-
-% \begin{macro}{\rcsgroup}[1]{group name}
-% Saves the group to |\rcs@g| and initiates |\rcs@g@|\meta{group name}|@rev|
-% and |\@rcs@g@|\meta{group name}|@rev| if this is the first time the group
-% got used.\par
-% The current group symbol `|*|' is invalid here because there is no way to
-% change to a current group.
-%    \begin{macrocode}
-\def\rcsgroup#1{%
-  \rcs@ifequal{#1}{*}%
-    {\PackageError{rcs-multi}%
-      {The group name '*' is invalid for '\string\rcsgroup'}{}{}%
-    }{}%
-  \xdef\rcs@g{#1}%
-  \let\rcs@pg\rcs@g
-  \ifx\rcs@g\empty\else%
-%    \end{macrocode}
-% Only initialise the group at first usage:
-%    \begin{macrocode}
-    \expandafter
-    \ifx\csname @rcsg@\rcs@g @rev\endcsname\relax%
-      \rcs@initgroup{\rcs@g}%
-%    \end{macrocode}
-% Now save new group to list. The list is checked if its empty to avoid an
-% unwanted leading comma.
-%    \begin{macrocode}
-      \ifx\rcs@glist\empty
-        \xdef\rcs@glist{#1}%
-      \else
-        \xdef\rcs@glist{\rcs@glist,#1}%
-      \fi
-    \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\thercsgroup}
-% Returns the current group name to the user.
-%    \begin{macrocode}
-\def\thercsgroup{\rcs@g}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcssetcg}[1]{group name}
-% Defines |\rcs@cg| to the given argument or to |\rcs@g| if the argument was
-% `|*|'.
-%    \begin{macrocode}
-\def\rcssetcg#1{%
-  \rcs@ifequal{#1}{*}%
-    {\def\rcs@cg{\rcs@g}}%
-    {\def\rcs@cg{#1}}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcscg@def}[1]{key name, \eg `rev', `date'}
-% Defines a |\rcscgXXX| macro, \eg |rcscgrev|, which returns the
-% requested keyword values of the current keyword group.
-%    \begin{macrocode}
-\def\rcscg@def#1{%
-  \expandafter
-  \def\csname rcscg#1\endcsname{%
-    \@ifundefined{rcsg@\rcs@cg @#1}{??}{%
-    \csname rcsg@\rcs@cg @#1\endcsname}%
-  }%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcscgrev}
-% \begin{macro}{\rcscgdate}
-% \begin{macro}{\rcscgauthor}
-% \begin{macro}{\rcscgyear}
-% \begin{macro}{\rcscgmonth}
-% \begin{macro}{\rcscgday}
-% \begin{macro}{\rcscghour}
-% \begin{macro}{\rcscgminute}
-% \begin{macro}{\rcscgsecond}
-% \begin{macro}{\rcscgtimezonehour}
-% \begin{macro}{\rcscgtimezoneminute}
-% \begin{macro}{\rcscgurl}
-% \begin{macro}{\rcscgfname}
-% Define all |\rcscgXXX| macros by calling \cs{rcscg@def} in a for loop.
-%    \begin{macrocode}
-\@for\@tempa:=%
-  rev,author,date,year,month,day,hour,minute,second,%
-  timezonehour,timezoneminute,url,fname%
-\do{%
-  \expandafter\rcscg@def\expandafter{\@tempa}%
-}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-% \end{macro}
-
-% \begin{macro}{\thercscg}
-% Simply return the internal macro.
-%    \begin{macrocode}
-\def\thercscg{\rcs@cg}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsg}[2]{group name}{keyword name}
-% Simply returns |rcsg@#1@#2| if defined, '??' otherwise.
-%    \begin{macrocode}
-\def\rcsg#1#2{%
-  \@ifundefined{rcsg@\rcs@temp @#2}%
-    {??}%
-    {\csname rcsg@\rcs@temp @#2\endcsname}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@addfiletogroup}[2]{file name}{group name}
-% Adds the given file to the given group. If the group list doesn't exist yet
-% it is initialised. A extra macro for each file is used to remember that the
-% file is already in the group. This could be avoided using a list search.\par
-% This is an internal macro so no `|*|' substitution for the group name.
-%    \begin{macrocode}
-\def\rcs@addfiletogroup#1#2{%
-  \expandafter
-  \ifx\csname @rcsg@#2@files@#1\endcsname\relax%
-    \expandafter\gdef\csname @rcsg@#2@files@#1\endcsname{1}%
-    %
-    \@ifundefined{@rcsg@#2@files}%
-      {\expandafter\xdef\csname @rcsg@#2@files\endcsname{#1}}%
-      {\expandafter\xdef\csname @rcsg@#2@files\endcsname{%
-        \csname @rcsg@#2@files\endcsname,#1%
-       }%
-      }%
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% The input files are added to the list of the current group at their begin to
-% have them before the included graphics and other external files.
-% Special care is taken to not re-initialise the main file which could happen in
-% some special cases (\eg |\lstinputlisting{\jobname .tex}|).
-%    \begin{macrocode}
-\rcsmulti@atbegininputfile{%
-  \rcs@ifequal{\rcs@filepath}{\rcs@maindir\jobname.\rcs@mainext}%
-    {}%
-    {\rcs@initfile}%
-  \rcs@ifequal{\rcs@fileext}{\rcs@mainext}%
-    {\rcs@addfiletogroup{\rcs@filedir\rcs@filebase}{\rcs@pg}}{}%
-  \rcs@ifequal{\rcs@fileext}{sty}%
-    {\rcs@addfiletogroup{\rcs@filedir\rcs@filebase}{\rcs@pg}}{}%
-  \rcs@ifequal{\rcs@fileext}{cls}%
-    {\rcs@addfiletogroup{\rcs@filedir\rcs@filebase}{\rcs@pg}}{}%
-  \rcs@addfiletogroup{\rcs@filepath}{\rcs@filedir\rcs@filebase}%
-}
-%    \end{macrocode}
-
-% \begin{macro}{\rcs@writegroup}[1]{group name}
-% Writes group to |\rcs@write| file.
-%    \begin{macrocode}
-\def\rcs@writegroup#1{%
-  \def\rcs@writekw##1{%
-   \immediate\write\rcs@write{%
-     \noexpand\@namedef{rcsg@#1@##1}{\csname @rcsg@#1@##1\endcsname}%
-   }%
-  }%
-  \rcs@writekw{rev}%
-  \rcs@writekw{date}%
-  \rcs@writekw{author}%
-  \rcs@writekw{year}%
-  \rcs@writekw{month}%
-  \rcs@writekw{day}%
-  \rcs@writekw{hour}%
-  \rcs@writekw{minute}%
-  \rcs@writekw{second}%
-  \rcs@writekw{timezonehour}%
-  \rcs@writekw{timezoneminute}%
-  \@ifundefined{@rcsg@#1@files}{}{%
-    \immediate\write\rcs@write{%
-      \noexpand
-      \rcs@namegdefverb{rcsg@#1@files}{\csname @rcsg@#1@files\endcsname}%
-    }%
-  }%
-  \immediate\write\rcs@write{%
-    \noexpand
-    \rcs@namegdefverb{rcsg@#1@url}{\csname @rcsg@#1@url\endcsname}^^J%
-    \noexpand
-    \rcs@namegdefverb{rcsg@#1@fname}{\csname @rcsg@#1@fname\endcsname}^^J%
-  }%
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\rcs@writeallgroups}[1]{macro holding a list of groups}
-%    \begin{macrocode}
-\def\rcs@writeallgroups#1{%
-  \begingroup
-    \ifx\relax#1\relax\else
-      \@for\rcs@temp:=#1\do{%
-        \rcs@ifvalidrev{@rcsg@\rcs@temp @rev}%
-          {%
-            \expandafter
-            \rcs@cleanfilelist\csname @rcsg@\rcs@temp @files\endcsname
-            \rcs@writegroup{\rcs@temp}%
-            \@ifundefined{@rcsg@\rcs@temp @files}{}%
-              {\expandafter\rcs@writeallgroups
-               \csname @rcsg@\rcs@temp @files\endcsname
-              }%
-          }{}%
-      }%
-    \fi
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@updategroup}[1]{group name}
-% Updates group with |\rcsfile...| macro values.
-%    \begin{macrocode}
-\def\rcs@updategroup#1{%
-  \@ifundefined{@rcsg@#1@rev}%
-    {\rcs@initgroup{#1}}%
-    {}%
-  \expandafter
-  \ifnum\csname @rcsg@#1@rev\endcsname<\rcsfilerev
-    \rcs@gkwset{#1}{rev}{\rcsfilerev}%
-    \rcs@gkwset{#1}{date}{\rcsfiledate}%
-    \rcs@gkwset{#1}{author}{\rcsfileauthor}%
-    \rcs@gkwset{#1}{year}{\rcsfileyear}%
-    \rcs@gkwset{#1}{month}{\rcsfilemonth}%
-    \rcs@gkwset{#1}{day}{\rcsfileday}%
-    \rcs@gkwset{#1}{hour}{\rcsfilehour}%
-    \rcs@gkwset{#1}{minute}{\rcsfileminute}%
-    \rcs@gkwset{#1}{second}{\rcsfilesecond}%
-    \rcs@gkwset{#1}{timezonehour}{\rcsfiletimezonehour}%
-    \rcs@gkwset{#1}{timezoneminute}{\rcsfiletimezoneminute}%
-    \rcs@gkwset{#1}{url}{\rcsfileurl}%
-    \rcs@gkwset{#1}{fname}{\rcsfilefname}%
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@definegroup}[1]{group name}
-% Defines group value so that they are available for the user, e.g. instead of
-% the internal |@rcsg@...| macros it sets the |rcsg@...| macros.
-% This is done by calling \cs{rcs@updategroup} with a modified version of
-% \cs{rcs@gkwset}.
-%    \begin{macrocode}
-\def\rcs@definegroup#1{%
-  \rcs@gkwdef{#1}{rev}%
-  \rcs@gkwdef{#1}{date}%
-  \rcs@gkwdef{#1}{author}%
-  \rcs@gkwdef{#1}{year}%
-  \rcs@gkwdef{#1}{month}%
-  \rcs@gkwdef{#1}{day}%
-  \rcs@gkwdef{#1}{hour}%
-  \rcs@gkwdef{#1}{minute}%
-  \rcs@gkwdef{#1}{second}%
-  \rcs@gkwdef{#1}{timezonehour}%
-  \rcs@gkwdef{#1}{timezoneminute}%
-  \rcs@gkwdef{#1}{url}%
-  \rcs@gkwdef{#1}{fname}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@initgroup}[1]{group name}
-% Initialises group.
-%    \begin{macrocode}
-\def\rcs@initgroup#1{%
-  \rcs@gkwset{#1}{rev}{-1}%
-  \rcs@gkwset{#1}{date}{}%
-  \rcs@gkwset{#1}{author}{}%
-  \rcs@gkwset{#1}{year}{0000}%
-  \rcs@gkwset{#1}{month}{00}%
-  \rcs@gkwset{#1}{day}{00}%
-  \rcs@gkwset{#1}{hour}{00}%
-  \rcs@gkwset{#1}{minute}{00}%
-  \rcs@gkwset{#1}{second}{00}%
-  \rcs@gkwset{#1}{timezonehour}{+00}%
-  \rcs@gkwset{#1}{timezoneminute}{00}%
-  \rcs@gkwset{#1}{url}{}%
-  \rcs@gkwset{#1}{fname}{}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-
-% \begin{macro}{\rcs@gkwset}[3]{group name}{keyword name}{value}
-% Sets \meta{value} for \meta{keyword} in \meta{group}.
-%    \begin{macrocode}
-\def\rcs@gkwset#1#2#3{%
-  \expandafter
-  \xdef\csname @rcsg@#1@#2\endcsname{#3}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@gkwdef}[2]{group name}{keyword name}
-% Defines |rcsg@...| macros used by the user macros to the value of the
-% internal |@rcsg@...| macros.
-%    \begin{macrocode}
-\def\rcs@gkwdef#1#2{%
-  \expandafter
-  \xdef\csname rcsg@#1@#2\endcsname{\csname @rcsg@#1@#2\endcsname}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@cleanfilelist}[1]{macro holing a file list}
-% Takes a macro which holds a file list and removes all files from the list 
-% which don't have a valid revision number.
-%    \begin{macrocode}
-\def\rcs@cleanfilelist#1{
-  \begingroup
-    \def\rcs@tmplist{}%
-    \ifx\relax#1\relax\else
-      \@for\rcs@temp:=#1\do{%
-        \expandafter\rcs@ifvalidrev
-        \expandafter{@rcsg@\rcs@temp @rev}%
-          {\edef\rcs@tmplist{\rcs@tmplist,\rcs@temp}}%
-          {}%
-      }%
-      \xdef#1{\expandafter\@gobble\rcs@tmplist\empty}%
-    \fi
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-% \subsection{Files as extra groups}
-% Macros which allow single files to be declared as extra groups so that their
-% keywords can be accessed in the whole document like with normal groups.
-% This special groups are not added to the list of groups.
-
-% A user-level switch is declared to enable or disable the automatic declaration
-% of every file as own group. This causes \cs{rcssubgroup} to be called for
-% all input files.
-% The if macro is defined outside the |\if@rcsmulti@subgroups| because
-% |\newif| inside |\if| is not a good idea.
-%    \begin{macrocode}
-\newif\ifrcssubgroups
-\rcssubgroupsfalse
-%    \end{macrocode}
-
-%    \begin{macrocode}
-\if@rcsmulti@subgroups
-\rcssubgroupstrue
-%    \end{macrocode}
-
-% \begin{macro}{\rcssubgroup}
-% User level and internal macro to declare the current file as extra group.
-% It produces the current file path and calls \cs{rcs@subgroup}.
-% Creates two groups one with and one without the file extension. The one
-% without holds the latest revision of all files included in this file.
-%    \begin{macrocode}
-\def\rcssubgroup{%
-  \begingroup
-    \rcs@removedotslash\rcs@filedir
-    \rcs@subgroup{\rcs@filedir\rcs@filebase}%
-    \rcs@subgroup{\rcs@filepath}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@subgroup}[1]{file name}
-% Macro to write a file as group to |.rcs| file. After checking if the filename
-% was not already written, the |.rcs| file is checked if it is open and then the
-% file keyword information is written.
-%    \begin{macrocode}
-\def\rcs@subgroup#1{%
-  \ifnum\rcsfilerev>-1\relax
-    \expandafter\ifx\csname rcs@g@#1\endcsname\relax%
-      \expandafter\gdef\csname rcs@g@#1\endcsname{1}%
-      \rcs@updategroup{#1}%
-    \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsignoreextensions}[1]{A comma separated list of file name
-% extensions (without leading dot) to ignore for automatic \csd{rcssubgroup}.}
-% A special macro is defined for all extensions. The existents of this macro is
-% then tested later to check if this extension should be ignored.
-%    \begin{macrocode}
-\def\rcsignoreextensions#1{%
-  \@for\rcs@temp:=#1\do{%
-    \expandafter\def\csname rcs@ignore@ext@\rcs@temp\endcsname{}%
-  }%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsconsiderextensions}[1]{A comma separated list of file name
-% extensions (without leading dot) to consider for automatic
-% \csd{rcssubgroup}.}
-% The special macro defined by \csi{rcsignoreextentions} is deleted, i.e. |\let|
-% to |\relax|.
-%    \begin{macrocode}
-\def\rcsconsiderextensions#1{%
-  \@for\rcs@temp:=#1\do{%
-  \expandafter\let\csname rcs@ignore@ext@\rcs@temp\endcsname\relax%
-  }%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% The following extensions are ignored by default.
-%    \begin{macrocode}
-\rcsignoreextensions{aux,bbl,cfg,cls,fd,enc,fls,glo,idx,ilg,ind,ist,%
-lof,log,lot,out,sty,rcs,svt,svx,toc}
-%    \end{macrocode}
-
-% Check at the end of every input file if files should be extra groups and
-% declare this file as group if its extension is not configured to be ignored.
-%    \begin{macrocode}
-\rcsmulti@atendinputfile{%
-  \if@rcsmulti@subgroups
-    \ifrcssubgroups
-      \expandafter\ifx\csname rcs@ignore@ext@\rcs@fileext\endcsname\relax
-      \rcssubgroup
-      \fi
-    \fi
-  \fi
-}
-%    \end{macrocode}
-
-%    \begin{macrocode}
-\AtBeginDocument{%
-  \if@rcsmulti@subgroups
-    \ifrcssubgroups
-      \rcs@addfiletogroup{\jobname .\rcs@mainext}{\jobname}%
-      \rcssubgroup
-    \fi
-  \fi
-}
-%    \end{macrocode}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-% \subsection{External Files}
-% Macros to declare external files and load the keywords from |.svx| files
-% generated by \scr{rcs-multi.pl}.
-%    \begin{macrocode}
-\if@rcsmulti@external
-%    \end{macrocode}
-
-% \begin{macro}{\rcsexternalgroup}[1]{group name}
-% Defines the default group of external files. The default is to always use the
-% current group.  An empty argument puts the external files in no group. A `|*|'
-% switches back to always use the current group.
-%    \begin{macrocode}
-\if@rcsmulti@groups
-\def\rcsexternalgroup#1{%
-  \rcs@ifequal{#1}{*}%
-    {\def\rcs@externalgroup{#1}}%
-    {\def\rcs@externalgroup{\rcs@g}}%
-}
-\def\rcs@externalgroup{\rcs@g}
-\else
-\def\rcs@externalgroup{}
-\fi
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsexternal}[2]{group name}{list of filenames in \texttt{\{ \}}}
-% Writes the current input file path and its argument as arguments of
-% \cs{@rcsexternal} into the |.rcs| file.
-%    \begin{macrocode}
-\newcommand*\rcsexternal[2][]{%
-  \if@filesw
-    \rcs@checkwrite
-    \begingroup
-      \rcs@ifequal{#1}{*}%
-        {\def\rcs@temp{\rcs@g}}%
-        {\rcs@ifempty{#1}%
-          {\def\rcs@temp{\rcs@externalgroup}}%
-          {\def\rcs@temp{#1}}%
-        }%
-      \immediate\write\rcs@write{%
-        \noexpand\@rcsexternal[\rcs@temp]{\rcs@filepath}{#2}%
-      }%
-    \endgroup
-  \fi
-  \rcs@inputsvx{\rcs@filedir\rcs@filebase}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsexternalpath}[1]{list of paths in \texttt{\{ \}}}
-% Writes its argument as argument of \cs{@rcsexternalpath} into the |.rcs| file.
-%    \begin{macrocode}
-\def\rcsexternalpath#1{%
-  \if@filesw
-    \rcs@checkwrite
-    \immediate\write\rcs@write{%
-      \noexpand\@rcsexternalpath{#1}%
-    }%
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\@rcsexternal}
-% \begin{macro}{\@rcsexternalpath}
-% Discards the argument(s). These macros and their arguments are only used by
-% the external \scr{rcs-multi.pl} script.
-%    \begin{macrocode}
-\newcommand*\@rcsexternal[3][]{}
-\def\@rcsexternalpath#1{}
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-
-
-% \begin{macro}{\rcsexternalfile}
-% This macro is generated by \scr{rcs-multi.pl} and should not be used by the
-% user.  If files-as-group is enabled some special characters are disabled and
-% the \cs{rcs@externalfile} is called to read the file name. Otherwise the
-% argument is simply removed.
-%    \begin{macrocode}
-\newcommand*\rcsexternalfile[1][\rcs@filedir\rcs@filebase]{%
-  \begingroup % TODO: maybe use \rcs@catcodes
-    \catcode`\_=12
-    \catcode`\&=12
-    \catcode`\^=12
-    \catcode`\$=12
-    \catcode`\#=12
-    \rcs@externalfile{#1}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@externalfile}[2]{group name}{file name}
-% Ends group which began in \cs{rcsexternalfile} and calls the appropriate
-% macros.
-%    \begin{macrocode}
-\def\rcs@externalfile#1#2{%
-  \endgroup
-  \if@rcsmulti@subgroups
-    \ifrcssubgroups
-      \rcs@ifequal{#1}{\rcs@rg}%
-        {\rcs@addfiletogroup{#2}{\rcs@filedir\rcs@filebase}}%
-        {\rcs@addfiletogroup{#2}{#1}}%
-      \rcs@subgroup{#2}%
-    \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-
-% If \op{external} option is not enabled a placeholder macro is defined which
-% simply ignores its argument.
-%    \begin{macrocode}
-\else
-  \def\rcsexternalfile#1{}%
-\fi
-%    \end{macrocode}
-
-
-% \subsection{Auto loading of \texttt{.svx} files}
-% Auto loading of |.svx| files at the begin of |\input| or |\include| files
-% using the \cs{rcsmulti@atbegininputfile} macro.
-% The macros \cs{rcs@addfiletogroup} and \cs{rcssubgroup} are used to do the
-% actual work.
-%    \begin{macrocode}
-\if@rcsmulti@autoload
-
-\rcsmulti@atbegininputfile{%
-  \rcs@ifequal{\rcs@fileext}{tex}%
-    {\rcs@inputsvx{\rcs@filedir\rcs@filebase}}%
-    {}%
-}
-%    \end{macrocode}
-
-% The main |.svx| is loaded at the end of the package.
-%    \begin{macrocode}
-%%\AtEndOfPackage{%
-\AtBeginDocument{%
-  \rcs@inputsvx{\jobname}%
-}
-%    \end{macrocode}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-
-% \subsection{Support for Graphic Packages}
-
-% \subsubsection{Common Code}
-%    \begin{macrocode}
-\if@rcsmulti@anygraphic
-%    \end{macrocode}
-
-% \begin{macro}{\rcsgraphicsgroup}[1]{graphic group name}
-% Defines the default group of graphics files. The default is empty which means
-% the current group.
-%    \begin{macrocode}
-\def\rcsgraphicsgroup#1{%
-  \rcs@ifequal{#1}{*}%
-    {\def\rcs@graphicsgroup{\rcs@g}}%
-    {\def\rcs@graphicsgroup{#1}}%
-}
-\def\rcs@graphicsgroup{\rcs@externalgroup}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsignoregraphic}[1]{file name/path}
-% Ignores the given graphic file by defining a special macro.
-%    \begin{macrocode}
-\def\rcsignoregraphic#1{%
-  \expandafter\def\csname rcs@ignoregraphic@#1\endcsname{}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsconsidergraphic}[1]{file name/path}
-% Deletes the special ignore macro to consider the graphic again.
-%    \begin{macrocode}
-\def\rcsconsidergraphic#1{%
-  \expandafter\let\csname rcs@ignoregraphic@#1\endcsname\relax%
-}
-%    \end{macrocode}
-% \end{macro}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-% \subsubsection{Package \texttt{graphics}}
-% Automatic declaration of all images included by |\includegraphics| from the
-% \pkg{graphics} package as external files. We use the |\Gin@setfile| macro from
-% that package which receives the image file name as third argument.
-%    \begin{macrocode}
-\if@rcsmulti@graphics
-\RequirePackage{graphics}[2006/02/20]
-%    \end{macrocode}
-
-% \begin{macro}{\Gin@setfile}[3]{??, not used}{??, not used}{graphic file
-% name/path}
-%    \begin{macrocode}
-\message{Package rcs-multi: patching macro '\string\Gin@setfile' from the
-'graphics' package!}%
-\let\rcsmulti@Gin@setfile\Gin@setfile
-\renewcommand*{\Gin@setfile}[3]{%
-  \expandafter\ifx\csname rcs@ignoregraphic@#3\endcsname\relax%
-    \rcsexternal[\rcs@graphicsgroup]{{#3}}%
-  \fi
-  \rcsmulti@Gin@setfile{#1}{#2}{#3}%
-}
-%    \end{macrocode}
-% \end{macro}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-
-% \subsubsection{Package \texttt{pgf}}
-% The \pkg{pgf} macro |\pgf@declareimage| which is called by the user macro
-% |\pgfdeclareimage| is used.
-%    \begin{macrocode}
-\if@rcsmulti@pgfimages
-\RequirePackage{pgf}[2008/01/15]
-%    \end{macrocode}
-
-% \begin{macro}{\pgf@declareimage}[3]{??, not used}{image label}{??, not used}
-%    \begin{macrocode}
-\message{Package rcs-multi: patching macro '\string\pgf@declareimage' and will
-patch generated macros '\string\pgf@image@<name>!' from the 'pgf' package!}%
-\let\rcsmulti@pgf@declareimage\pgf@declareimage
-\renewcommand*{\pgf@declareimage}[3][]{%
-  \rcsmulti@pgf@declareimage[#1]{#2}{#3}%
-%    \end{macrocode}
-% At this point the used image filename is defined by |\pgf@filename| and the
-% image itself is defined by |\pgf@image@#2!| which is a |\let| copy of
-% temporary |\pgf@image|.  An own copy of this is created and the old name
-% |\pgf@image@#2!| is used to execute \cs{rcsexternal} every time the image is
-% included using |\pgfuseimage|.
-% \begin{macrocode}
-  \ifx\pgf@filename\empty\else
-    \expandafter\ifx\csname rcs@ignoregraphic@\pgf@filename\endcsname\relax%
-      \expandafter\global\expandafter%
-      \let\csname rcsmulti@pgf@image@#2!\endcsname=\pgf@image%
-      \expandafter\xdef\csname pgf@image@#2!\endcsname{%
-        \noexpand\rcsexternal[\noexpand\rcs@graphicsgroup]{{\pgf@filename}}%
-        \csname rcsmulti@pgf@image@#2!\endcsname
-      }%
-    \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-%
-% \subsection{Table of Revisions}
-%
-%    \begin{macrocode}
-\if@rcsmulti@table
-\ifx\tableofcontents\relax\else
-%    \end{macrocode}
-%
-% \begin{macro}{\rcsrevisionsname}
-% Simple definition for now. Language support over `babel's |\languagename|
-% possible.
-%    \begin{macrocode}
-\def\rcsrevisionsname{Table of Revisions}%
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\rcs@svt}
-% File ending for table of revision auxiliary file. A macro is used to allow
-% redefinition by the user if another package is uses the same ending.
-%    \begin{macrocode}
-\def\rcs@svt{svt}
-%    \end{macrocode}
-% \end{macro}
-%
-
-% \begin{macro}{\tableofrevisions}
-% The |\tableofcontents| macro from standard \LaTeX\ is adapted for this macro.
-% Classes which provide chapters will get a different table then one which not.
-%    \begin{macrocode}
-\AtBeginDocument{%
-\ifx\chapter\@undefined
-
-%% Adapted from the \tableofcontents macro, LaTeX `article' class [2005/09/16]
-\newcommand\tableofrevisions{%
-  \section*{\rcsrevisionsname
-  \@mkboth{\MakeUppercase\rcsrevisionsname}{\MakeUppercase\rcsrevisionsname}}%
-  \rcs@input{\jobname .\rcs@svt}%
-}
-
-\else
-
-%% Adapted from the \tableofcontents macro, LaTeX `book' class [2005/09/16]
-\newcommand\tableofrevisions{%
-  \if@twocolumn
-    \@restonecoltrue\onecolumn
-  \else
-    \@restonecolfalse
-  \fi
-  \chapter*{\rcsrevisionsname
-    \@mkboth{\MakeUppercase\rcsrevisionsname}{\MakeUppercase\rcsrevisionsname}}%
-  \rcs@input{\jobname .\rcs@svt}%
-  \if@restonecol\twocolumn\fi
-}
-
-\fi
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%    \begin{macrocode}
-\fi % defined \tableofcontents
-%    \end{macrocode}
-
-% \begin{macro}{\rcs@writerow}[3]{row type ('group', 'file', 'global', \ldots)}
-% {row type specific argument}{row type specific argument}
-% Writes a table row by using |\rcs@tabcell| and |\rcs@tabcellarg| defined by
-% the |\rcs@writeXXXrow| macro below.
-%    \begin{macrocode}
-\def\rcs@writerow#1#2#3{%
-  \immediate\write\rcs@svtwrite{%
-    \expandafter\noexpand\csname rcs#1row\endcsname
-    \expandafter\noexpand\csname rcstab#1\endcsname{#2}{#3}\space
-    \@ampersamchar\space
-    \rcs@tabcell{rev}\space\@ampersamchar\space
-    \rcs@tabcell{author}\space\@ampersamchar\space
-    \noexpand\rcstabdate%
-    \rcs@tabcellarg{year}%
-    \rcs@tabcellarg{month}%
-    \rcs@tabcellarg{day}%
-    \rcs@tabcellarg{hour}%
-    \rcs@tabcellarg{minute}%
-    \rcs@tabcellarg{second}%
-    \rcs@tabcellarg{timezonehour}%
-    \rcs@tabcellarg{timezoneminute}%
-    \space\@backslashchar\@backslashchar
-    \expandafter\noexpand\csname endrcs#1row\endcsname
-  }%
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@writegrouprow}[1]{current group}
-%    \begin{macrocode}
-\def\rcs@writegrouprow#1{%
-  \begingroup
-    \def\rcs@tabcellarg##1{{\csname @rcsg@#1@##1\endcsname}}%
-    \def\rcs@tabcell##1{\expandafter\noexpand\csname rcstab##1\endcsname%
-      \rcs@tabcellarg{##1}%
-    }%
-    \rcs@writerow{group}{#1}{}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@writesubgrouprow}[2]{grouping level}{subgroup name}
-%    \begin{macrocode}
-\def\rcs@writesubgrouprow#1#2{%
-  \begingroup
-    \def\rcs@tabcellarg##1{{\csname @rcsg@#2@##1\endcsname}}%
-    \def\rcs@tabcell##1{\expandafter\noexpand\csname rcstab##1\endcsname%
-      \rcs@tabcellarg{##1}%
-    }%
-    \rcs@writerow{subgroup}{#1}{#2}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@writefilerow}[2]{grouping level}{file name}
-%    \begin{macrocode}
-\def\rcs@writefilerow#1#2{%
-  \begingroup
-    \def\rcs@tabcellarg##1{{\csname @rcsg@#2@##1\endcsname}}%
-    \def\rcs@tabcell##1{\expandafter\noexpand\csname rcstab##1\endcsname%
-      \rcs@tabcellarg{##1}%
-    }%
-    \rcs@writerow{file}{#1}{#2}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@writeglobalrow}
-%    \begin{macrocode}
-\def\rcs@writeglobalrow{%
-  \begingroup
-  \def\rcs@tabcellarg##1{{\csname @rcs@##1\endcsname}}%
-  \def\rcs@tabcell##1{\expandafter\noexpand\csname rcstab##1\endcsname%
-    \rcs@tabcellarg{##1}%
-  }%
-  \rcs@writerow{global}{}{}%
-  \endgroup
-}
-%    \end{macrocode}
-% \end{macro}
-
-% \subsubsection{Table Format Macros}\label{sec:impl:table}
-% Generic format macro used in the |.svt| file. Can be redefined by the user to
-% change table format. % TODO: More documentation needed!
-%
-% \begin{macro}{\rcstable}
-%    \begin{macrocode}
-\def\rcstable{%
-  \begin{tabular}{p{0.425\textwidth}rp{0.25\textwidth}p{0.225\textwidth}}%
-    \hline
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\endrcstable}
-%    \begin{macrocode}
-\def\endrcstable{\hline\end{tabular}}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcstablehead}
-%    \begin{macrocode}
-\def\rcstablehead{%
-    Name & Rev & Last Author & Last Changed At \\\hline
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcstablefoot}
-%    \begin{macrocode}
-\def\rcstablefoot{}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsbeforetable}
-%    \begin{macrocode}
-\def\rcsbeforetable{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcsaftertable}
-%    \begin{macrocode}
-\def\rcsaftertable{\clearpage}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcsglobalrow}
-%    \begin{macrocode}
-\def\rcsglobalrow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\endrcsglobalrow}
-%    \begin{macrocode}
-\def\endrcsglobalrow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcsgrouprow}
-%    \begin{macrocode}
-\def\rcsgrouprow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\endrcsgrouprow}
-%    \begin{macrocode}
-\def\endrcsgrouprow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcssubgrouprow}
-%    \begin{macrocode}
-\def\rcssubgrouprow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\endrcssubgrouprow}
-%    \begin{macrocode}
-\def\endrcssubgrouprow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcssubgrouprow}
-%    \begin{macrocode}
-\def\rcsfilerow{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\endrcsfilerow}
-%    \begin{macrocode}
-\def\endrcsfilerow{}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcstabglobal}
-%    \begin{macrocode}
-\def\rcstabglobal{Document}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcstabgroup}
-%    \begin{macrocode}
-\def\rcstabgroup#1{Group `#1'}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcstabfile}
-%    \begin{macrocode}
-\def\rcstabsubgroup#1{%
-  \raggedright
-  \addtolength{\leftskip}{#1\medskipamount}%
-  \begingroup
-  \catcode`\_=12
-  \catcode`\&=12
-  \catcode`\^=12
-  \catcode`\$=12
-  \catcode`\#=12
-  \rcs@tabsubgroup
-}
-\def\rcs@tabsubgroup#1{\endgroup Subgroup `\texttt{\small #1}'}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcstabfile}
-%    \begin{macrocode}
-\def\rcstabfile#1{%
-  \raggedright
-  \addtolength{\leftskip}{#1\medskipamount}%
-  \begingroup
-  \catcode`\_=12
-  \catcode`\&=12
-  \catcode`\^=12
-  \catcode`\$=12
-  \catcode`\#=12
-  \rcs@tabfile
-}
-\def\rcs@tabfile#1{\endgroup File `\texttt{\small #1}'}
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcstabrev}
-%    \begin{macrocode}
-\def\rcstabrev{}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcstabauthor}
-%    \begin{macrocode}
-\def\rcstabauthor#1{\rcsFullAuthor{#1}}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\rcstabdate}
-%    \begin{macrocode}
-\def\rcstabdate#1#2#3#4#5#6#7#8{%
-    #1-#2-#3 #4:#5:#6% #7#8%
-}
-%    \end{macrocode}
-% \end{macro}
-
-%    \begin{macrocode}
-\fi
-%    \end{macrocode}
-%
-
 % \subsection{Other macros}
 % This section contains macros which don't fit in any other section.
 %
 % \begin{macro}{\rcs}
-% \begin{macro}{\rcs*}
-% After *-testing, the intermediate macros |\rcs@s| and |\rcs@n| are called to
-% strip the |{ }| from |\rcs|[|*|]|{$...$}| and to remove the |*|. Then the
-% actual macros are called to strip the dollars with or without the space
-% before the last dollar.
-% \changes{v1.2}{2007/06/22}{Added star version. Normal version was not
-% changed to not break existing documents with user defined keywords without
-% leading space.}
-%    \begin{macrocode}
-\newcommand{\rcs}{\@ifnextchar{*}{\rcs@s}{\rcs@n}}
-\def\rcs@n#1{\@rcs@n#1}
-\def\rcs@s*#1{\@rcs@s#1}
-\def\@rcs@n$#1${#1}
-\def\@rcs@s$#1 ${#1}
+% Strips the |$ $| around the keyword. A space must be before the final dollar.
+% \begin{macrocode}
+\providecommand{\rcs}[1]{\@revs#1}
+\def\@rcs$#1 ${#1}
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
@@ -2876,55 +1228,21 @@ patch generated macros '\string\pgf@image@<name>!' from the 'pgf' package!}%
 %    \begin{macrocode}
 \def\@rcs@getfilename#1/#2\relax{%
     \rcs@ifempty{#2}%
-      {\endgroup\gdef\rcsfilefname{#1}}%
+      {\endgroup\gdef\rcsfilename{#1}}%
       {\@rcs@getfilename#2\relax}%
 }%
 %    \end{macrocode}
 % \end{macro}
 
-% \subsection{Auxiliary file generation and read-back}
+% \subsection{Write to Auxiliary file}
 %
-% Reread output from last compile run if it exists.
-%    \begin{macrocode}
-\@input{\jobname .rcs}
-%    \end{macrocode}
 
-% \begin{macro}{\rcs@checkwrite}
-% Checks if .rcs file is already open and if not opens it. This makes sure that
-% the file is only created if really needed. The macro is only needed once, so
-% it's redefines itself to |\relax| at the end.
-%    \begin{macrocode}
-\def\rcs@checkwrite{%
- \@ifundefined{rcs@write}{%
-   \newwrite\rcs@write
-   \immediate\openout\rcs@write=\jobname.rcs\relax%
-   \immediate\write\rcs@write{\@percentchar\space SVN Keyword cache}%
-   %\immediate\write\rcs@write{\noexpand\makeatletter}%
- }{}%
- \let\rcs@checkwrite=\relax
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\rcs@writercs}
-% This macro writes the |.rcs| auxiliary file and is called from a
+% \begin{macro}{\rcs@writeaux}
+% This macro writes the |.aux| auxiliary file and is called from a
 % |\AtEndDocument| macro later on.
 %    \begin{macrocode}
-{\catcode`\&=12
-\gdef\@ampersamchar{&}
-}
-\def\rcs@writercs{%
-%    \end{macrocode}
-% Remove all files which do not have a revision number from list:
-%    \begin{macrocode}
-    \if@rcsmulti@groups
-    \fi
-%    \end{macrocode}
-% Write document global values:
-%    \begin{macrocode}
-    \rcs@checkwrite
-    \immediate\write\rcs@write{^^J%
-      \@percentchar\space Global values:^^J%
+\def\rcs@writeaux{%
+    \immediate\write\@mainaux{^^J%
       \noexpand\def\noexpand\rcsrev{\@rcs@rev}^^J%
       \noexpand\def\noexpand\rcsdate{\@rcs@date}^^J%
       \noexpand\def\noexpand\rcsauthor{\@rcs@author}^^J%
@@ -2934,163 +1252,24 @@ patch generated macros '\string\pgf@image@<name>!' from the 'pgf' package!}%
       \noexpand\def\noexpand\rcshour{\@rcs@hour}^^J%
       \noexpand\def\noexpand\rcsminute{\@rcs@minute}^^J%
       \noexpand\def\noexpand\rcssecond{\@rcs@second}^^J%
-      \noexpand\def\noexpand\rcstimezonehour{\@rcs@timezonehour}^^J%
-      \noexpand\def\noexpand\rcstimezoneminute{\@rcs@timezoneminute}^^J%
-      \noexpand\rcs@gdefverb\noexpand\rcsurl{\@rcs@url}^^J%
-      \noexpand\rcs@gdefverb\noexpand\rcsfname{\@rcs@fname}^^J%
+      \noexpand\rcs@gdefverb\noexpand\rcsname{\@rcs@name}^^J%
     }%
-%    \end{macrocode}
-% Write group keyword macro definitions.
-% Remove all files which do not have a revision number from list:
-%    \begin{macrocode}
-    \if@rcsmulti@groups
-      \rcs@cleanfilelist\@rcsg@@files
-      \immediate\write\rcs@write{%
-        \noexpand\def\noexpand\rcsg@@files{\@rcsg@@files}^^J%
-      }%
-      \rcs@writeallgroups\@rcsg@@files
-%    \end{macrocode}
-% Write keyword group values if groups were specified:
-%    \begin{macrocode}
-      \ifx\rcs@glist\empty\else
-        \begingroup
-          \immediate\write\rcs@write{^^J%
-            \@percentchar\space SVN File Groups: \rcs@glist
-          }%
-          \rcs@writeallgroups\rcs@glist
-        \endgroup
-      \fi
-    \else
-      \immediate\write\rcs@write{^^J}%
-    \fi
-%    \end{macrocode}
-% Finally close output file:
-%    \begin{macrocode}
-    \immediate\closeout\rcs@write%
 }
 %    \end{macrocode}
 % \end{macro}
 
 
-% \begin{macro}{\rcs@writegroupfiles}[1]{group name}
-% Writes all files of a group to the |.svt| file. If the file is actually a
-% subgroup it calls itself recursively.
-%    \begin{macrocode}
-\def\rcs@writegroupfiles#1{%
-  \begingroup
-    \advance\rcs@grouplevel by 1\relax
-    \expandafter\let
-    \expandafter\rcs@files\csname @rcsg@#1@files\endcsname
-    \ifx\rcs@files\relax\else
-      \rcs@cleanfilelist\rcs@files
-      \@for\rcs@file:=\rcs@files\do{%
-        \rcs@ifvalidrev{@rcsg@\rcs@file @rev}%
-          {%
-            \@ifundefined{@rcsg@\rcs@file @files}%
-              {\rcs@writefilerow{\the\rcs@grouplevel}{\rcs@file}}%
-              {\rcs@ifequal{\csname @rcsg@\rcs@file @files\endcsname}{\rcs@file.tex}%
-                {\rcs@writefilerow{\the\rcs@grouplevel}{\rcs@file.tex}}%
-                {%
-                  \rcs@writesubgrouprow{\the\rcs@grouplevel}{\rcs@file}%
-                  \rcs@writegroupfiles{\rcs@file}%
-                }%
-              }%
-          }{}%
-      }%
-    \fi
-  \endgroup
-}%
-%    \end{macrocode}
-% \end{macro}
-
-% \begin{macro}{\rcs@writesvt}
-% This macro writes the |.svt| auxiliary file and is called from a
-% |\AtEndDocument| macro later on.
-%    \begin{macrocode}
-\def\rcs@writesvt{%
-%    \end{macrocode}
-% Write table of revisions if enabled.
-%    \begin{macrocode}
-  \if@rcsmulti@table
-%    \end{macrocode}
-% Open |.svt| file and write table header:
-%    \begin{macrocode}
-    \newwrite\rcs@svtwrite
-    \immediate\openout\rcs@svtwrite=\jobname.\rcs@svt\relax
-    \@onelevel@sanitize\rcstable%
-    \immediate\write\rcs@svtwrite{%
-      \noexpand\rcsbeforetable^^J%
-      \rcstable
-      \noexpand\rcstablehead^^J%
-    }%
-%    \end{macrocode}
-% Group rows:
-%    \begin{macrocode}
-    \let\rcs@grouplevel\@tempcnta
-    \rcs@grouplevel=0\relax
-    \rcs@writeglobalrow{}%
-    \rcs@writegroupfiles{}%
-%
-    \@for\rcs@g:=\rcs@glist\do{%
-      \@ifundefined{@rcsg@\rcs@g @rev}{}%
-      {%
-        \expandafter
-        \ifnum\csname @rcsg@\rcs@g @rev\endcsname>0\relax
-          \rcs@writegrouprow{\rcs@g}%
-          \rcs@writegroupfiles{\rcs@g}%
-        \fi
-      }%
-    }%
-
-%    \end{macrocode}
-% Write table footer and close file:
-%    \begin{macrocode}
-    \@onelevel@sanitize\endrcstable%
-    \immediate\write\rcs@svtwrite{%
-      \noexpand\rcstablefoot^^J%
-      \endrcstable^^J%
-      \noexpand\rcsaftertable
-    }%
-    \immediate\closeout\rcs@svtwrite%
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
 
 % At the end of document the values are written to the auxiliary file.
 %    \begin{macrocode}
 \AtEndDocument{%
   \if@filesw
-    \ifx\@rcs@rev\empty\else
-      \ifnum\@rcs@rev<1\else
-        \rcs@writercs
-        \rcs@writesvt
-      \fi
+    \ifx\@rcs@date\empty\else
+      \rcs@writeaux
     \fi
   \fi
 }
 %    \end{macrocode}
-%
-% \subsection{Backward compatibility wrapper \texttt{rcskw.sty}}
-% For backward compatibility a wrapper file with the old package name |rcskw| is
-% provided. Newer documents should use the name \rcsmulti.
-% \setcounter{CodelineNo}{0}
-% \iffalse
-%</package>
-%<*wrapper>
-% \fi
-%    \begin{macrocode}
-\NeedsTeXFormat{LaTeX2e}[1999/12/01]
-\ProvidesPackage{rcskw}
-[\filedate\space\fileversion\space Backward compatibility wrapper for rcs-multi]
-\PackageWarning{rcskw}{The package 'rcskw' got renamed to 'rcs-multi'
-and is now only a backward compatibility wrapper which loads 'rcs-multi'.
-Please adjust your document preamble to use the new name.}
-\RequirePackage{rcs-multi}[\filedate]
-%    \end{macrocode}
-% \iffalse
-%</wrapper>
-% \fi
 %
 % \Finale
 \endinput
