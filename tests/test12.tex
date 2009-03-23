@@ -1,0 +1,26 @@
+\documentclass[12pt]{report}
+\usepackage{svn-multi}
+\usepackage{hyperref}
+
+% URL with _
+\svnidlong
+{$HeadURL: svn+ssh://scharrer-online.de/home/martin/svn/src/trunk/latex/svn-multi/tests/test12.tex $}
+{$LastChangedDate: 2008-12-03 13:29:19 +0000 (Wed, 03 Dec 2008) $}
+{$LastChangedRevision: 146 $}
+{$LastChangedBy: martin $}
+\svnid{$Id: test12.tex 146 2008-12-03 13:29:19Z martin $}
+
+\begin{document}
+
+\chapter{Test 12}
+Usage of \verb+\svnsetmainurl+ together with \verb+\svnmainurl+ and \verb+\svnmainfilename+.\\
+
+\section{Main file}
+
+\noindent
+svnmainurl: \svnnolinkurl{\svnmainurl} \\
+svnmainfilename: \svnnolinkurl{\svnmainfilename} \\
+
+\input{test11_sub1}
+
+\end{document}
