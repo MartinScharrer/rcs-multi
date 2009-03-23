@@ -25,7 +25,7 @@ new: fullclean all
 
 doc: ${PACKAGE}.pdf 
 
-package: ${PACKAGE}.sty ${PACKAGE}.pl
+package: ${PACKAGE}.sty
 
 %.pdf: %.dtx
 	${LATEX} $*.dtx
@@ -45,7 +45,6 @@ ${PACKAGE}.pdf:
 
 ${INSGENERATED}: *.dtx ${PACKAGE}.ins 
 	yes | latex ${PACKAGE}.ins
-	@-chmod +x *.pl
 
 clean:
 	rm -f ${TEXAUX} $(addprefix ${TESTDIR}/, ${TEXAUX})
