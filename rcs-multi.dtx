@@ -346,9 +346,9 @@
 %
 % \section{Introduction}
 % This package allows to typeset version control (VC) information provided by 
-% RCS\footnote{RCS homepage: \url{http://www.gnu.org/software/rcs/} 
-% keywords (\eg |$||Id: ... $|) in \LaTeX\ documents which can contain of 
-% multiple |.tex| files included using |\include| or |\input|.
+% RCS\footnote{RCS homepage: \url{http://www.gnu.org/software/rcs/}} keywords 
+% (\eg |$||Id: ... $|) in \LaTeX\ documents which can contain of multiple |.tex| 
+% files included using |\include| or |\input|.
 %
 % This package reads the keywords of all files and provides the VC information 
 % of of the most recent changed file of the document to the user through a set 
@@ -474,19 +474,19 @@
 % influence on the calculation of the latest revision.
 %
 % \subsection{Accessing Date Values}\label{sec:date}
-% \begin{tabular}{@{}l@{\hspace{-2\macrosep}}l@{\hspace{-2\macrosep}}l@{}}\\
+% \begin{tabular}{@{}l@{\hspace{-2\macrosep}}ll@{}}\\
 % \DescribeMacro*{rcsyear}{}&
-% \DescribeMacro*{rcsfileyear}{}&
+% \DescribeMacro*{rcsfileyear}{}\\
 % \DescribeMacro*{rcsmonth}{}&
-% \DescribeMacro*{rcsfilemonth}{}&
+% \DescribeMacro*{rcsfilemonth}{}\\
 % \DescribeMacro*{rcsday}{}&
-% \DescribeMacro*{rcsfileday}{}&
+% \DescribeMacro*{rcsfileday}{}\\
 % \DescribeMacro*{rcshour}{}&
-% \DescribeMacro*{rcsfilehour}{}&
+% \DescribeMacro*{rcsfilehour}{}\\
 % \DescribeMacro*{rcsminute}{}&
-% \DescribeMacro*{rcsfileminute}{}&
+% \DescribeMacro*{rcsfileminute}{}\\
 % \DescribeMacro*{rcssecond}{}&
-% \DescribeMacro*{rcsfilesecond}{}&
+% \DescribeMacro*{rcsfilesecond}{}\\
 % \end{tabular}
 % \\*[\medskipamount]
 % Whenever the date information is read, \ie by 
@@ -694,14 +694,11 @@
 %
 % \begin{macro}{\rcstime}
 % \begin{macro}{\rcsfiletime}
-% \begin{macro}{\rcscgtime}
 % This macros simple use the hour, minute and second macros.
 %    \begin{macrocode}
 \def\rcstime{\rcshour:\rcsminute:\rcssecond}
 \def\rcsfiletime{\rcsfilehour:\rcsfileminute:\rcsfilesecond}
-\def\rcscgtime{\rcscghour:\rcscgminute:\rcscgsecond}
 %    \end{macrocode}
-% \end{macro}
 % \end{macro}
 % \end{macro}
 
@@ -824,7 +821,6 @@
 % return is changed to category ``ignore'' so line breaks are not taken as part
 % of the verbatim arguments.
 %    \begin{macrocode}
-\if@rcsmulti@verbatim
 \def\rcs@catcodes{%
   \let\do\@makeother
   \dospecials
@@ -833,9 +829,6 @@
   \catcode`\{1
   \catcode`\}2
 }
-\else
-  \def\rcs@catcodes{}
-\fi
 %    \end{macrocode}
 % \end{macro}
 
@@ -845,9 +838,7 @@
   \begingroup
     \def\rcs@temp{#1}%
     \begingroup
-      \if@rcsmulti@verbatim
-        \rcs@catcodes
-      \fi
+      \rcs@catcodes
       \rcs@gdefverb@
 }
 %    \end{macrocode}
@@ -899,9 +890,7 @@
 % Reads the full keyword and strips the dollars.
 %    \begin{macrocode}
 \begingroup
-\if@rcsmulti@verbatim
 \catcode`\$=12
-\fi
 \gdef\rcskwsave@read $#1$\relax{%
   \rcs@checkcolon#1:\relax
 }
@@ -1186,7 +1175,6 @@
 \def\@rcs$#1 ${#1}
 %    \end{macrocode}
 % \end{macro}
-% \end{macro}
 
 % \begin{macro}{\rcsnolinkurl}[1]{URL}
 % This code is taken from the \pkg{hyperref} package and is the definition of
@@ -1243,15 +1231,15 @@
 %    \begin{macrocode}
 \def\rcs@writeaux{%
     \immediate\write\@mainaux{^^J%
-      \noexpand\def\noexpand\rcsrev{\@rcs@rev}^^J%
-      \noexpand\def\noexpand\rcsdate{\@rcs@date}^^J%
-      \noexpand\def\noexpand\rcsauthor{\@rcs@author}^^J%
-      \noexpand\def\noexpand\rcsyear{\@rcs@year}^^J%
-      \noexpand\def\noexpand\rcsmonth{\@rcs@month}^^J%
-      \noexpand\def\noexpand\rcsday{\@rcs@day}^^J%
-      \noexpand\def\noexpand\rcshour{\@rcs@hour}^^J%
-      \noexpand\def\noexpand\rcsminute{\@rcs@minute}^^J%
-      \noexpand\def\noexpand\rcssecond{\@rcs@second}^^J%
+      \noexpand\gdef\noexpand\rcsrev{\@rcs@rev}^^J%
+      \noexpand\gdef\noexpand\rcsdate{\@rcs@date}^^J%
+      \noexpand\gdef\noexpand\rcsauthor{\@rcs@author}^^J%
+      \noexpand\gdef\noexpand\rcsyear{\@rcs@year}^^J%
+      \noexpand\gdef\noexpand\rcsmonth{\@rcs@month}^^J%
+      \noexpand\gdef\noexpand\rcsday{\@rcs@day}^^J%
+      \noexpand\gdef\noexpand\rcshour{\@rcs@hour}^^J%
+      \noexpand\gdef\noexpand\rcsminute{\@rcs@minute}^^J%
+      \noexpand\gdef\noexpand\rcssecond{\@rcs@second}^^J%
       \noexpand\rcs@gdefverb\noexpand\rcsname{\@rcs@name}^^J%
     }%
 }

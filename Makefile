@@ -52,7 +52,7 @@ clean:
 fullclean:
 	rm -f ${TEXAUX} $(addprefix ${TESTDIR}/, ${TEXAUX}) ${GENERATED} *~ *.backup
 
-example: example.pdf gexample
+example: example.pdf
 
 example.pdf: example_main.tex example_chap1.tex ${PACKAGE}.sty
 	${LATEX} $<
