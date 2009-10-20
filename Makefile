@@ -1,87 +1,96 @@
-# $Id: Makefile 628 2007-07-10 20:32:06Z martin $
+# $Id: Makefile 1452 2009-10-20 14:53:34Z martin $
 
-PACKAGE=rcs-multi
-PACKFILES = ${PACKAGE}.dtx ${PACKAGE}.ins ${PACKAGE}.pdf example.tex \
-			example.pdf Makefile README
-TEXAUX = *.aux *.log *.glo *.ind *.idx *.out *.svt *.toc *.ilg *.gls *.hd
+PACKAGE     = rcs-multi
+PACKAGE_STY = ${PACKAGE}.sty
+PACKAGE_DTX = ${PACKAGE}.dtx
+PACKAGE_SCR =
+PACKAGE_DOC = $(PACKAGE_DTX:.dtx=.pdf)
+PACKAGE_SRC = ${PACKAGE_DTX} ${PACKAGE}.ins Makefile
+PACKFILES   = ${PACKAGE_SRC} ${PACKAGE_DOC} README
+
+TEXAUX = *.aux *.log *.glo *.ind *.idx *.out *.svn *.svx *.svt *.toc *.ilg *.gls *.hd *.fdb_latexmk
+INSGENERATED = ${PACKAGE_STY} svnkw.sty svn-multi.pl
+GENERATED = ${INSGENERATED} ${PACKAGE}.pdf ${PACKAGE}.zip ${PACKAGE}.tar.gz ${TESTDIR}/test*.pdf
+ZIPFILE = ${PACKAGE}-${ZIPVERSION}.zip
+TDSZIPFILE = ${PACKAGE}-${ZIPVERSION}.tds.zip
+
 TESTDIR = tests
 TESTS = $(patsubst %.tex,%,$(subst ${TESTDIR}/,,$(wildcard ${TESTDIR}/test?.tex ${TESTDIR}/test??.tex))) # look for all test*.tex file names and remove the '.tex' 
 TESTARGS = -output-directory ${TESTDIR}
-INSGENERATED = ${PACKAGE}.sty
-GENERATED = ${INSGENERATED} ${PACKAGE}.pdf example.pdf ${PACKAGE}.zip ${PACKAGE}.tar.gz ${TESTDIR}/test*.pdf
-ZIPFILE = ${PACKAGE}-${ZIPVERSION}.zip
 
 LATEX_OPTIONS = -interaction=batchmode
 LATEX = pdflatex ${LATEX_OPTIONS}
+
+TEXMFDIR = ${HOME}/texmf
 
 RED   = \033[01;31m
 GREEN = \033[01;32m
 WHITE = \033[00m
 
-.PHONY: all doc package clean fullclean example testclean ${TESTS}
+CP = cp -v
+MV = mv -v
+RMDIR = rm -rf
+MKDIR = mkdir -p
+
+.PHONY: all doc package clean fullclean example testclean ${TESTS} tds ${CHECK_LOG}
+
+###############################################################################
 
 all: package doc example
 new: fullclean all
 
-doc: ${PACKAGE}.pdf 
+doc: ${PACKAGE_DOC}
 
-package: ${PACKAGE}.sty
+package: ${PACKAGE_STY} ${PACKAGE_SCR}
 
 %.pdf: %.dtx
-	${LATEX} $*.dtx
 	${LATEX} $*.dtx
 	-makeindex -s gind.ist -o $*.ind $*.idx
 	-makeindex -s gglo.ist -o $*.gls $*.glo
 	${LATEX} $*.dtx
 	${LATEX} $*.dtx
 
-%.pdf: %.eps
-	epstopdf $<
+${PACKAGE}.pdf: ${PACKAGE}.sty
 
-%.eps: %.dia
-	dia -t eps -e $@ $<
-
-${PACKAGE}.pdf:
-
-${INSGENERATED}: *.dtx ${PACKAGE}.ins 
+${INSGENERATED}: ${PACKAGE_DTX} ${PACKAGE}.ins 
 	yes | latex ${PACKAGE}.ins
 
 clean:
 	rm -f ${TEXAUX} $(addprefix ${TESTDIR}/, ${TEXAUX})
 
-fullclean:
-	rm -f ${TEXAUX} $(addprefix ${TESTDIR}/, ${TEXAUX}) ${GENERATED} *~ *.backup
+fullclean: clean
+	rm -f ${GENERATED} *~ *.backup
+	rm -f ${PACKAGE}*.zip
+	rm -rf tds/
 
-example: example.pdf
 
-example.pdf: example.tex ${PACKAGE}.sty
-	${RM} example_chap*.tex
-	${LATEX} $<
-	${LATEX} $<
+zip: ${PACKFILES}
+	@${MAKE} --no-print-directory ${ZIPFILE}
 
-zip: fullclean package doc example tests ${ZIPFILE}
-${PACKAGE}.zip: zip
+zip: ZIPVERSION=$(shell grep "Package: ${PACKAGE} " ${PACKAGE}.log | \
+	sed -e "s/.*Package: ${PACKAGE} ....\/..\/..\s\+\(v\S\+\).*/\1/")
 
-zip: ZIPVERSION=$(shell grep '\\def\\fileversion{.*}' ${PACKAGE}.dtx | sed -e 's/\\def\\fileversion{\(.*\)}/\1/' -e 's/\s\+//g')
+tdszip: ZIPVERSION=$(shell grep "Package: ${PACKAGE} " ${PACKAGE}.log | \
+	sed -e "s/.*Package: ${PACKAGE} ....\/..\/..\s\+\(v\S\+\).*/\1/")
 
-${ZIPFILE}: ${PACKFILES}
-	grep -q '\* Checksum passed \*' ${PACKAGE}.log
+${PACKAGE}%.zip: ${PACKFILES}
+	grep -L '\* Checksum passed \*' ${PACKAGE_DTX:.dtx=.log} | wc -l | grep -q '^0$$'
 	-pdfopt ${PACKAGE}.pdf opt_${PACKAGE}.pdf && mv opt_${PACKAGE}.pdf ${PACKAGE}.pdf
-	zip ${ZIPFILE} ${PACKFILES}
+	${RM} $@
+	zip $@ ${PACKFILES}
 	@echo
-	@echo "ZIP file ${ZIPFILE} created!"
+	@echo "ZIP file $@ created!"
 
-tar.gz: ${PACKAGE}.tar.gz
+release: fullclean package doc example tests zip
 
-${PACKAGE}.tar.gz:
-	tar -czf $@ ${PACKFILES}
+###############################################################################
 
 # Make sure TeX finds the input files in TESTDIR
 tests ${TESTS}: export TEXINPUTS:=${TEXINPUTS}:${TESTDIR}
 tests ${TESTS}: LATEX_OPTIONS=
 
 testclean:
-	@${RM} $(foreach ext, aux log out pdf, tests/test*.${ext})
+	@${RM} $(foreach ext, aux log out pdf svn svx, tests/test*.${ext})
 
 tests: package testclean
 	@echo "Running tests: ${TESTS}:"
@@ -96,4 +105,37 @@ ${TESTS}: % : ${TESTDIR}/%.tex package testclean
 		then /bin/echo -e "${GREEN}$@ succeeded${WHITE}" >&2; \
 		else /bin/echo -e "${RED}$@ failed!!!!!!${WHITE}" >&2; fi
 
+###############################################################################
+
+tds: .tds
+
+.tds: ${PACKAGE_STY} ${PACKAGE_DOC} ${PACKAGE_SRC}
+	@grep -q '\* Checksum passed \*' ${PACKAGE}.log
+	${RMDIR} tds
+	${MKDIR} tds/
+	${MKDIR} tds/tex/ tds/tex/latex/ tds/tex/latex/${PACKAGE}/
+	${MKDIR} tds/doc/ tds/doc/latex/ tds/doc/latex/${PACKAGE}/
+	${MKDIR} tds/source/ tds/source/latex/ tds/source/latex/${PACKAGE}/
+	-test -n "${PACKAGE_SCR}" && ${MKDIR} tds/scripts/ tds/scripts/${PACKAGE}/
+	${CP} ${PACKAGE_STY} tds/tex/latex/${PACKAGE}/
+	${CP} ${PACKAGE_DOC} tds/doc/latex/${PACKAGE}/
+	-${CP} ${PACKAGE_SRC} tds/source/latex/${PACKAGE}/
+	-test -n "${PACKAGE_SCR}" && ${CP} ${PACKAGE_SCR} tds/scripts/${PACKAGE}/
+	@touch $@
+
+tdszip: ${TDSZIPFILE}
+
+${TDSZIPFILE}: .tds
+	${RM} ${TDSZIPFILE}
+	cd tds && zip -r ../${TDSZIPFILE} .
+
+###############################################################################
+
+install: .tds
+	test -d "${TEXMFDIR}" && ${CP} -a tds/* "${TEXMFDIR}/" && texhash ${TEXMFDIR}
+
+uninstall:
+	test -d "${TEXMFDIR}" && ${RM} -rv "${TEXMFDIR}/tex/latex/${PACKAGE}" \
+	"${TEXMFDIR}/doc/latex/${PACKAGE}" "${TEXMFDIR}/source/latex/${PACKAGE}" \
+	"${TEXMFDIR}/scripts/${PACKAGE}" && texhash ${TEXMFDIR}
 
