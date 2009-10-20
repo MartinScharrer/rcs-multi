@@ -4,12 +4,12 @@ PACKAGE     = rcs-multi
 PACKAGE_STY = ${PACKAGE}.sty
 PACKAGE_DTX = ${PACKAGE}.dtx
 PACKAGE_SCR =
-PACKAGE_DOC = $(PACKAGE_DTX:.dtx=.pdf)
-PACKAGE_SRC = ${PACKAGE_DTX} ${PACKAGE}.ins Makefile
+PACKAGE_DOC = $(PACKAGE_DTX:.dtx=.pdf) example.pdf
+PACKAGE_SRC = ${PACKAGE_DTX} ${PACKAGE}.ins Makefile example.tex example_chap1.tex example_chap2.tex
 PACKFILES   = ${PACKAGE_SRC} ${PACKAGE_DOC} README
 
 TEXAUX = *.aux *.log *.glo *.ind *.idx *.out *.svn *.svx *.svt *.toc *.ilg *.gls *.hd *.fdb_latexmk
-INSGENERATED = ${PACKAGE_STY} svnkw.sty svn-multi.pl
+INSGENERATED = ${PACKAGE_STY}
 GENERATED = ${INSGENERATED} ${PACKAGE}.pdf ${PACKAGE}.zip ${PACKAGE}.tar.gz ${TESTDIR}/test*.pdf
 ZIPFILE = ${PACKAGE}-${ZIPVERSION}.zip
 TDSZIPFILE = ${PACKAGE}-${ZIPVERSION}.tds.zip
