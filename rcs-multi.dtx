@@ -33,227 +33,18 @@
 \ProvidesFile{rcs-multi.dtx}
  [\filedate\space\fileversion\space RCS Keywords for multi-file LaTeX documents]
 
-\documentclass{ltxdoc}
+\documentclass{ydoc}
 \usepackage{rcs-multi}
-\usepackage{booktabs}
-\usepackage{ifpdf}
-\ifpdf
-  % use hypdoc if you have it, hyperref else
-  \IfFileExists{hypdoc.sty}
-    {\usepackage{hypdoc}}
-    {\usepackage{hyperref}}
-\else
-  \let\url\texttt
-\fi
 \usepackage{xspace}
 \newcommand{\ie}{i.e.\@\xspace}
 \newcommand{\eg}{e.g.\@\xspace}
 
-\iffalse
-\let\css=\cs
-\let\op=\cs
-\let\DescribeOption\DescribeMacro
-\let\DescribeScript\DescribeOption
-\else % crossreference of macros in documentation
-\makeatletter
+\def\karg#1{\texttt{\$#1\$}}
+\def\kmarg#1{\texttt{\$}\meta{#1}\texttt{\$}}
+\def\rcsmulti{\pkg{rcsmulti}\xspace}
 
-\usepackage{xspace}
-\@namedef{seen@package@latex}{1} %^^A avoid footnotes for 'latex'
-\newcommand*{\pkg}[1]{%
-  \href{http://tug.ctan.org/pkg/#1}{\texttt{#1}}%
-  % URL footnote (for print-out) on first appearance:
-  \@ifundefined{seen@package@#1}{%
-    \footnote{CTAN: \url{http://tug.ctan.org/pkg/#1}}%
-    \@namedef{seen@package@#1}{1}%
-  }{}%
-  \xspace
-}
-\newcommand*{\rcsmulti}{%
-  \texttt{rcs-multi}\xspace%
-}
-
-% link \cs to macro definitions
-\let\origmacro\macro
-\let\origendmacro\endmacro
-\let\origStopEventually\StopEventually
-\let\origPrintDescribeMacro\PrintDescribeMacro
-\usepackage{xcolor}
-\definecolor{darkred}{rgb}{0.333.0.0,0.0}
-\hypersetup{colorlinks=true,linkcolor=darkred,urlcolor=darkred}
-\definecolor{macrodesccolor}{rgb}{0.0,0.0,0.8}
-\definecolor{macroimplcolor}{rgb}{0.0,0.0,0.4}
-\definecolor{metacolor}{rgb}{0.0,0.4,0.4}
-\definecolor{scriptcolor}{rgb}{0.2,0.6,0.2}
-\definecolor{optioncolor}{rgb}{0.3,0.2,0}
-
-\let\macroline\\
-\newlength{\macrosep}
-\setlength{\macrosep}{-3em}
-\renewcommand{\meta@font@select}{\color{metacolor}\itshape}
-\newcommand{\macroformat}[1]{\textbf{\ttfamily #1}}
-\newcommand{\optionformat}[1]{\textbf{\sffamily #1}}
-\newcommand{\scriptformat}[1]{\textbf{\ttfamily #1}}
-\newcommand{\macroargformat}[1]{\texttt{#1}}
-\newcommand{\scriptargformat}[1]{\textbf{#1}}
-\newcommand{\macrohlinkprefix}{desc}
-\newcommand{\macrolink}{}
-
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
-
-\def\DescribeMacro{\@ifnextchar*{\DescribeMacroS}{\DescribeMacroN}}
-\def\DescribeMacroN{%
-  \bigskip\pagebreak[3]\par\noindent\DescribeMacroS*%
-}
-\def\DescribeMacroS*#1#2{%
-  \begingroup
-  \g@namedef{href@desc@#1}{}%
-  \immediate\write\@mainaux{%
-    \noexpand\g@namedef{href@desc@#1}{}%
-  }%
-  \@ifundefined{href@impl@#1}%
-    {\let\macrolink\relax}%
-    {\def\macrolink{\hyperlink{impl@#1}}}%
-  \hypersetup{linkcolor=macrodesccolor}%
-  \hspace*{\macrosep}%
-  \raisebox{\baselineskip}[\baselineskip]{\hypertarget{desc@#1}{}}%
-  \macrolink{\macroformat{\textcolor{macrodesccolor}{\textbackslash #1}}}%
-  \noindent\mbox{}\macroargformat{#2}\nopagebreak
-  \macroline*[0.2\baselineskip]%
-  \endgroup
-  \nopagebreak
-  \ignorespaces
-}
-\def\DescribeScript{\@ifnextchar*{\DescribeScriptS}{\DescribeScriptN}}
-\def\DescribeScriptN{%
-  \bigskip\par\pagebreak[2]\noindent\DescribeScriptS*%
-}
-\def\DescribeScriptS*#1#2{%
-  \hspace*{\macrosep}%
-  \raisebox{\baselineskip}[\baselineskip]{\hypertarget{script@#1}{}}%
-  \scriptformat{\textcolor{scriptcolor}{#1}}%
-  \noindent\mbox{}\scriptargformat{\ {#2}}\macroline*[0.2\baselineskip]%
-  \nopagebreak
-}
-\def\DescribeOption{\@ifnextchar*{\DescribeOptionS}{\DescribeOptionN}}
-\def\DescribeOptionN{%
-  \bigskip\par\noindent\DescribeOptionS*%
-}
-\def\DescribeOptionS*#1{%
-  \hspace*{\macrosep}%
-  \raisebox{\baselineskip}[\baselineskip]{\hypertarget{option@#1}{}}%
-  \optionformat{\textcolor{optioncolor}{#1}}%
-  \noindent\mbox{}\macroline*[0.2\baselineskip]%
-  \nopagebreak
-}
-\newcounter{macrolevel}
-\renewenvironment{macro}[1]{%
-  \addtocounter{macrolevel}{1}%
-  \expandafter\macroX\expandafter{\expandafter\@gobble\string#1}%
-}{%
-  \addtocounter{macrolevel}{-1}%
-}
-\providecommand*{\g@namedef}[1]{%
-  \expandafter\gdef\csname #1\endcsname
-}
-\newcommand*{\macroX}[1]{%
-  \ifnum\c@macrolevel<2
-    \smallskip
-  \fi
-  \par\noindent
-  \g@namedef{href@impl@#1}{}%
-  \immediate\write\@mainaux{%
-    \noexpand\g@namedef{href@impl@#1}{}%
-  }%
-  \@ifundefined{href@desc@#1}%
-    {\let\macrolink\relax}%
-    {\def\macrolink{\hyperlink{desc@#1}}}%
-  \hspace*{\macrosep}%
-  \raisebox{\baselineskip}[\baselineskip]{\hypertarget{impl@#1}{}}%
-  \macrolink{\macroformat{%
-    \textcolor{macroimplcolor}{\textbackslash #1}}}%
-  \\*[\smallskipamount]%
-  \@ifnextchar\begin{\vspace*{-\baselineskip}}{\imacroarg}%
-}
-
-\newcounter{macroargs}
-\newcounter{nmacroarg}
-
-\newcommand*{\imacroarg}[1][0]{%
-  \setcounter{macroargs}{#1}%
-  \setcounter{nmacroarg}{1}%
-  \ifnum\c@macroargs>0
-    \expandafter\imacroargX
-  \fi
-}
-\newcommand*{\aftermacroargs}{%
-  \@ifnextchar\begin
-    {\\*[-2ex]\ignorespaces}%
-    {\\*[\smallskipamount]\ignorespaces}%
-}
-\newcommand*{\imacroargX}[1]{%
-  \hspace*{-1em}\texttt{\#\thenmacroarg:} #1\relax
-  \ifnum\c@macroargs>1
-    \newline
-  \fi
-  \addtocounter{nmacroarg}{1}%
-  \addtocounter{macroargs}{-1}%
-  \ifnum\c@macroargs>0
-    \expandafter\imacroargX
-  \else
-    \expandafter\aftermacroargs
-  \fi
-}
-
-
-\def\karg#1{\{\$\textcolor{metacolor}{#1}\$\}}
-\def\kmarg#1{\{\$\meta{#1}\$\}}
-
-\DeclareRobustCommand{\csi}[1]{%
-  \begingroup
-  \hypersetup{linkcolor=macroimplcolor}%
-  \renewcommand{\macrohlinkprefix}{impl}%
-  \@ifundefined{href@impl@#1}%
-    {\let\macrolink\relax}%
-    {\def\macrolink{\hyperlink{impl@#1}}}%
-  \csX{#1}%
-  \endgroup
-}
-\DeclareRobustCommand{\csd}[1]{%
-  \begingroup
-  \hypersetup{linkcolor=macrodesccolor}%
-  \renewcommand{\macrohlinkprefix}{macro}%
-  \@ifundefined{href@desc@#1}%
-    {\let\macrolink\relax}%
-    {\def\macrolink{\hyperlink{desc@#1}}}%
-  \csX{#1}%
-  \endgroup
-}
-\DeclareRobustCommand{\csX}[1]{%
-  \begingroup
-  \macrolink{\texttt{\textbackslash#1}}%
-  \endgroup
-}
-\let\cs\csd
-\DeclareRobustCommand{\css}[1]{\texttt{\textbackslash#1}}
-\DeclareRobustCommand{\op}[1]{%
-  \begingroup
-  \hypersetup{linkcolor=optioncolor}%
-  \hyperlink{option@#1}{\textbf{\sffamily #1}}%
-  \endgroup
-}
-\DeclareRobustCommand{\scr}[1]{%
-  \begingroup
-  \hypersetup{linkcolor=scriptcolor}%
-  \hyperlink{script@#1}{\scriptformat{#1}}%
-  \endgroup
-}
-
-\def\StopEventually#1{\origStopEventually{#1}%
-\let\cs\csi
-}
-
-\fi
+\let\csi\cs
+\def\cs#1{\Macro{#1}\relax}
 
 \usepackage{graphicx}
 
@@ -263,8 +54,6 @@
 %\PageIndex
 \RecordChanges
 %\OnlyDescription
-\widowpenalty=500
-\clubpenalty=500
 \begin{document}
   \DocInput{rcs-multi.dtx}%
   \PrintChanges
@@ -325,23 +114,8 @@
 % \DoNotIndex{\ProcessKeyvalOptions,\SetupKeyvalOptions}
 % \DoNotIndex{\@firstoftwo,\@secondoftwo,\@gobble}
 %
-% \title{The \textsf{rcs-multi} package}
-% \author{Martin Scharrer \\ \url{martin@scharrer-online.de} \\
-% \url{http://www.scharrer-online.de/latex/rcs-multi}\\
-% CTAN: \url{http://tug.ctan.org/pkg/rcs-multi}}
-% \date{Version \expandafter\@gobble\fileversion\\[0.5ex]\today}
-%
-% \ifpdf
-% \hypersetup{%
-%   pdfauthor   = {Martin Scharrer <martin@scharrer-online.de>},
-%   pdftitle    = {The rcs-multi package, \fileversion, r\filerev\ from 
-%   \filedate},
-%   pdfsubject  = {Documentation of LaTeX package rcs-multi which allows the 
-%   typesetting of RCS keywords in multi-file LaTeX documents},
-%   pdfkeywords = {rcs-multi, LaTeX, RCS, multiple files, keywords, Version 
-%   Control, Id}
-% }%
-% \fi
+% \author{Martin Scharrer}
+% \email{martin@scharrer-online.de}
 % \maketitle
 %
 % \section{Introduction}
@@ -390,7 +164,7 @@
 % See section~\ref{sec:kwaccess} to learn how to typeset the keyword values.
 %
 % \DescribeMacro{rcsid}{\karg{Id}}
-% \DescribeMacro*{rcsid}{\karg{Header}}
+% \DescribeMacro{rcsid}{\karg{Header}}
 % The macro is for the |Id| keyword and must be written like shown.  A trailing 
 % colon with or without spaces after the keyword name (`|Id|') is also valid but 
 % \textbf{everything else} except a valid RCS string will cause a \TeX{} parse 
@@ -417,17 +191,17 @@
 % teletype font (|\texttt|) or use |{\urlstyle{rm}\rcsnolinkurl{...}}| which
 % requires the \pkg{hyperref} package.
 %
-% \DescribeMacro{rcsrev}{}
-% \DescribeMacro*{rcsdate}{}
-% \DescribeMacro*{rcsauthor}{}
+% \DescribeMacro{rcsrev}
+% \DescribeMacro{rcsdate}
+% \DescribeMacro{rcsauthor}
 % These macros hold the keyword values of the whole document, \ie of the most
 % recent revision. They can be used everywhere in every file of the \LaTeX{}
 % document, after |\usepackage{rcs-multi}| of course. Please see
 % section~\ref{sec:date} how to typeset parts of the date.
 %
-% \DescribeMacro{rcsfilerev}{}
-% \DescribeMacro*{rcsfiledate}{}
-% \DescribeMacro*{rcsfileauthor}{}
+% \DescribeMacro{rcsfilerev}
+% \DescribeMacro{rcsfiledate}
+% \DescribeMacro{rcsfileauthor}
 % These macros hold the keyword values of the current \LaTeX{} file, but only if
 % it contains a \cs{rcsid} or \cs{rcsidlong} macro. Otherwise the macros hold
 % either zero values or the values of the last file dependent on whether an
@@ -435,14 +209,14 @@
 % section~\ref{sec:date} how to typeset parts of the date. See \cs{rcskw} below
 % for all other keywords.
 %
-% \DescribeMacro{rcsmainfilename}{}
+% \DescribeMacro{rcsmainfilename}
 % The macro \cs{rcsmainfilename} hold the filename of the main \LaTeX{file}. 
 % It can be used to typeset this information anywhere in the document which 
 % might be more descriptive as the name of the current file (which can be 
 % typeset with \cs{rcskw}|{HeadURL}| or \cs{rcskw}|{Filename}| after \cs{rcsid} 
 % or \cs{rcsidlong}, respectively). ^^A TODO: Change to correct names!
 %
-% \DescribeMacro{rcssetmainfile}{}
+% \DescribeMacro{rcssetmainfile}
 % This will declare the current file as the main LaTeX file by defining the 
 % above macros. It will automatically be called at the end of the preamble so 
 % the user normally doesn't have to use it by him- or herself as long it isn't 
@@ -450,7 +224,7 @@
 % of \cs{rcsmainfilename} directly without going over the auxiliary file.  
 % Calling it in several files will make this two macros inconsistent.
 %
-% \DescribeMacro{rcskw}{\marg{keyword name}}
+% \DescribeMacro{rcskw}{<keyword name>}
 % All keywords saved with \cs{rcsid} or \cs{rcskwsave} can be typeset by this 
 % macro which is a holdover from a very early version of this 
 % package when multiple files where not supported.  It takes one argument which 
@@ -469,48 +243,41 @@
 % used inside |\url|. In this case the warning code will be typeset(!) verbatim
 % into the document by |\url|.
 %
-% \DescribeMacro{rcskwdef}{\marg{keyword name}\marg{value}}
+% \DescribeMacro{rcskwdef}{<keyword name>}{<value>}
 % This macro is used to define the keyword values. This is normally only called
 % internally but could be used by the user to override single keywords.  The
 % values can then be typeset by \cs{rcskw}.  Note that this macro has no
 % influence on the calculation of the latest revision.
 %
 % \subsection{Accessing Date Values}\label{sec:date}
-% \begin{tabular}{@{}l@{\hspace{-2\macrosep}}ll@{}}\\
-% \DescribeMacro*{rcsyear}{}&
-% \DescribeMacro*{rcsfileyear}{}\\
-% \DescribeMacro*{rcsmonth}{}&
-% \DescribeMacro*{rcsfilemonth}{}\\
-% \DescribeMacro*{rcsday}{}&
-% \DescribeMacro*{rcsfileday}{}\\
-% \DescribeMacro*{rcshour}{}&
-% \DescribeMacro*{rcsfilehour}{}\\
-% \DescribeMacro*{rcsminute}{}&
-% \DescribeMacro*{rcsfileminute}{}\\
-% \DescribeMacro*{rcssecond}{}&
-% \DescribeMacro*{rcsfilesecond}{}\\
-% \end{tabular}
-% \\*[\medskipamount]
+% \begin{DescribeMacrosTab}{ll}
+%   \Macro{rcsyear}    &  \Macro{rcsfileyear}   \\
+%   \Macro{rcsmonth}   &  \Macro{rcsfilemonth}  \\
+%   \Macro{rcsday}     &  \Macro{rcsfileday}    \\
+%   \Macro{rcshour}    &  \Macro{rcsfilehour}   \\
+%   \Macro{rcsminute}  &  \Macro{rcsfileminute} \\
+%   \Macro{rcssecond}  &  \Macro{rcsfilesecond} \\
+% \end{DescribeMacrosTab}
 % Whenever the date information is read, \ie by 
 % \cs{rcskwsave}|{Date}| or \cs{rcsid}, the following macros are set to the 
 % appropriate date parts for the 
 % current file (the |\rcsfile...| versions) and for the whole document.
 %
 %
-% \DescribeMacro{rcstime}{}
-% \DescribeMacro*{rcsfiletime}{}
+% \DescribeMacro{rcstime}
+% \DescribeMacro{rcsfiletime}
 % This macros return the time part of the date only and simply return the
 % corresponding hour, minute and second macros with a colon as separator.
 %
-% \DescribeMacro{rcspdfdate}{}
+% \DescribeMacro{rcspdfdate}
 % Returns the last changed date of the whole document in a format needed for
 % |\pdfinfo|. Can be used like this:\\
 % \hbox{}\hfill|\pdfinfo{ /CreationDate (D:\rcspdfdate) }|\hfill\hbox{}\\
 % to set the PDF creation date to the last changed date if you use |pdflatex| to
 % compile your \LaTeX{} document.
 %
-% \DescribeMacro{rcstoday}{}
-% \DescribeMacro*{rcsfiletoday}{}
+% \DescribeMacro{rcstoday}
+% \DescribeMacro{rcsfiletoday}
 % These macros typeset the document-global or current-file, respectively, using 
 % the format of |\today| which depends on the used language.
 % To adjust the language of your document use the \pkg{babel} package.
@@ -523,18 +290,20 @@
 % then you can write \eg |\rcsFullAuthor{\rcsauthor}| or
 % |\rcsFullAuthor{\rcsfileauthor}|.
 %
-% \DescribeMacro{rcsRegisterAuthor}{\marg{author}\marg{full name}}
+% \DescribeMacro{rcsRegisterAuthor}{<author>}{<full name>}
 % This macro registers \meta{full name} as full name for \meta{author} (a
 % RCS username) for later use with \cs{rcsFullAuthor}.
 %
-% \DescribeMacro{rcsFullAuthor}{\marg{author name or macro}}
-% \DescribeMacro*{rcsFullAuthor*}{\marg{author name or macro}}
+% \DescribeMacro{rcsFullAuthor}{<author name or macror>}
+% \DescribeMacro{rcsFullAuthor*}{<author name or macro>}
 % Takes the username as argument and returns the full name if it was registered
-% first with \cs{rcsRegisterAuthor}, otherwise it returns the given username.
+% first with \Macro\rcsRegisterAuthor, otherwise it returns the given username.
 % The star version returns the username in parentheses after the full name.
-% This is normally used in one of the following forms:\\
-% \hspace*{3em}\cs{rcsFullAuthor}|{|\cs{rcsauthor}|}|\\
-% \hspace*{3em}\cs{rcsFullAuthor}|{|\cs{rcsfileauthor}|}|\\
+% This is normally used in one of the following forms:
+% \begin{macroquote}
+%     \rcsFullAuthor{\AlsoMacro\rcsauthor}     \\
+%     \rcsFullAuthor{\AlsoMacro\rcsfileauthor}
+% \end{macroquote}
 %
 % \subsection{Using Full Revision Names}
 % Like the author's also revision names/tags can be registered and used later.
@@ -543,12 +312,12 @@
 % correct results when you like to tag the to-be-checked-in revision.  Please
 % note that this has nothing to do with the normal tagging.
 %
-% \DescribeMacro{rcsRegisterRevision}{\marg{revision number}\marg{tag name}}
+% \DescribeMacro{rcsRegisterRevision}{<revision number>}{<tag name>}
 % This registers \meta{tag name} as tag name for \meta{revision number} for
 % later use with \cs{rcsFullRevision}.
 %
-% \DescribeMacro{rcsFullRevision}{\marg{revision number or macro}}
-% \DescribeMacro*{rcsFullRevision*}{\marg{revision number or macro}}
+% \DescribeMacro{rcsFullRevision}{<revision number or macro>}
+% \DescribeMacro{rcsFullRevision*}{<revision number or macro>}
 % Takes a revision number coming from a macro like \cs{rcsrev}, \cs{rcsfilerev}
 % or a number as argument and returns the full name if it was registered first
 % with \cs{rcsRegisterRevision}, otherwise it returns ``Revision \meta{revision
@@ -556,8 +325,7 @@
 % parentheses after the tag name, \eg |Name (1.2)|.
 %
 % \subsection{Verbatim URLs with and without Hyperlinks}
-% \vspace{-\baselineskip}
-% \DescribeMacro{rcsnolinkurl}{\marg{macro with returns special text}}
+% \DescribeMacro{rcsnolinkurl}{<macro with returns special text>}
 % This macro allows you to write |\rcsnolinkurl{\rcskw{HeadURL}}| and get the
 % Head URL typeset verbatim. However |\url{|\cs{rcskw}|{HeadURL}}|
 % (\pkg{hyperref} package) gives you the same result with a hyperlink. Both
@@ -569,6 +337,7 @@
 %
 % \StopEventually{}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \clearpage
 % \section{Implementation}
 % \subsection{Package Header}
 %    \begin{macrocode}
