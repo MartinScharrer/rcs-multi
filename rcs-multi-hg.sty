@@ -1,0 +1,30 @@
+% Written by Martin Scharrer <martin@scharrer-online.de>
+% 29th March 2012
+% This is free software under the LPPL license v1.3c or later.
+% This is a small proof-of-concept patch to support the Mercurial Id keyword format
+% in the author's rcs-multi package.
+\ProvidesPackage{rcs-multi-hg}[2012/03/29 v0.1alpha Mercurial (hg) support patch for rcs-multi]
+\RequirePackage{rcs-multi}
+
+\newcommand\hgid{%
+    \begingroup
+        \rcs@catcodes
+        \hgid@
+}
+\def\hgid@#1{%
+        \rcskwsave@read#1\relax
+    \endgroup
+    \ifx\rcskwId\@empty\else
+        \expandafter\hg@scanId\rcskwId\relax
+    \fi
+}
+
+\def\hg@scanId#1,v #2 #3 #4 #5\relax{%
+  \@rcs@scandate{#3 #4}%
+  \@rcs@updateid{#2}{#3 #4}{#5}{#1}%
+  \rcskwdef{Filename}{#1}%
+  \rcskwdef{Date}{#3 #4}%
+  \rcskwdef{Revision}{#2}%
+  \rcskwdef{Author}{#5}%
+}
+
