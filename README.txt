@@ -8,8 +8,8 @@ control system RCS inside your LaTeX files anywhere
 you like. Like the very similar package 'svn-multi' the usage of
 multiple files for one LaTeX document is well supported.
 
-Copyright (C) 2009 Martin Scharrer
-E-mail: martin@scharrer-online.de
+Copyright (c) 2009-2022 Martin Scharrer
+E-mail: martin.scharrer@web.de
 WWW: http://www.scharrer-online.de/latex/rcs-multi/
 
 This work may be distributed and/or modified under the
